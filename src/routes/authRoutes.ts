@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import {  login } from '../controllers/userController';
+import {  login, saveUser } from '../controllers/userController';
 import { validate } from '../middleware/validate';
 import { loginSchema, registerSchema } from '../validators/auth.validator';
 
@@ -35,6 +35,7 @@ const router = Router();
  *         description: Invalid credentials
  */
 router.post('/login', validate(loginSchema), login);
+router.post('/register', validate(registerSchema), saveUser);
 
 
 
