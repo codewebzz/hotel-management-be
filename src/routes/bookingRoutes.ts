@@ -349,4 +349,6 @@ router.delete('/:id', authenticateToken, deleteBooking);
  *                   type: string
  */
 router.delete('/:id', authenticateToken, deleteBooking);
+router.get('/:id', authenticateToken, getBookingById);
+
 export default router;

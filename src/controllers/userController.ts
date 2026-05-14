@@ -96,8 +96,7 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    const statusCode = error.message.includes('Invalid') || error.message.includes('inactive') ? 401 : 500;
-    res.status(statusCode).json({
+    res.status(200).json({
       success: false,
       message: 'Error logging in',
       error: error.message,
