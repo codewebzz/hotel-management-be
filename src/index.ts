@@ -37,6 +37,18 @@ app.use(express.urlencoded({ extended: true }));
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
+// Root route
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to the Hotel Management System API',
+    status: 'Operational',
+    version: '1.0.0',
+    documentation: '/api-docs',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Public routes (no authentication required)
 app.get('/api/hello', (req: Request, res: Response) => {
   res.status(200).json({
