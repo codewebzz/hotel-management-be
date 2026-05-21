@@ -7,6 +7,7 @@ import {
   deleteBrand,
   getActiveBrands,
   toggleBrandStatus,
+  getBrandsByCompany,
 } from '../controllers/brandController';
 import { authenticateToken } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -16,7 +17,7 @@ import {
   paginationSchema,
 } from '../validators/brand.validator';
 
-const router = Router();
+const router: Router = Router();
 
 // Protected brand routes with validation
 
@@ -72,7 +73,6 @@ router.get('/', authenticateToken, validate(paginationSchema, 'query'), getAllBr
  *             required:
  *               - name
  *               - email
- *               - branchId
  *             properties:
  *               name:
  *                 type: string
@@ -99,10 +99,6 @@ router.get('/', authenticateToken, validate(paginationSchema, 'query'), getAllBr
  *                 format: float
  *                 nullable: true
  *                 description: Longitude for the address
- *               branchId:
- *                 type: string
- *                 format: uuid
- *                 description: ID of the branch this brand belongs to
  *     responses:
  *       201:
  *         description: Brand created successfully
@@ -128,6 +124,10 @@ router.post(
  *         description: All active brands retrieved successfully
  */
 router.get('/all', authenticateToken, getActiveBrands);
+
+// Lazy load: brands belonging to a specific company
+router.get('/by-company/:companyId', authenticateToken, getBrandsByCompany);
+
 
 /**
  * @swagger
@@ -196,10 +196,6 @@ router.get('/:id', authenticateToken, getBrandById);
  *                 type: number
  *                 format: float
  *                 description: Longitude for the address
- *               branchId:
- *                 type: string
- *                 format: uuid
- *                 description: ID of the branch (optional, if changing branch)
  *               isActive:
  *                 type: boolean
  *                 description: Whether the brand is active

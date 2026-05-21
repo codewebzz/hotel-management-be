@@ -14,7 +14,7 @@ import {
   paginationSchema,
 } from '../validators/invoice.validator';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

@@ -16,7 +16,7 @@ import {
   paginationSchema,
 } from "../validators/company.validator";
 
-const router = Router();
+const router: Router = Router();
 
 // Protected company routes with validation
 /**

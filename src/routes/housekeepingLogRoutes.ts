@@ -14,7 +14,7 @@ import {
   paginationSchema,
 } from '../validators/housekeepingLog.validator';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

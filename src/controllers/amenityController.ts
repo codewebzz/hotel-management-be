@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { AmenityService } from '../services/amenityService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const amenityService = new AmenityService();
 
@@ -9,7 +10,7 @@ export const createAmenity = async (req: Request, res: Response) => {
     const { name, description, icon } = req.body;
 
     if (!name) {
-      return res.status(400).json({ message: 'Amenity name is required' });
+      return SendError(res, 'Amenity name is required', 400);
     }
 
     const amenity = await amenityService.createAmenity({
@@ -18,18 +19,10 @@ export const createAmenity = async (req: Request, res: Response) => {
       icon,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Amenity created successfully',
-      data: amenity,
-    });
+    return SendSuccess(res, 'Amenity created successfully', amenity, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('already exists') ? 409 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating amenity',
-      error: error.message,
-    });
+    return SendError(res, 'Error creating amenity', statusCode, error);
   }
 };
 
@@ -41,25 +34,16 @@ export const getAllAmenities = async (req: Request, res: Response) => {
 
     // Validate pagination parameters
     if (page < 1) {
-      return res.status(400).json({
-        success: false,
-        message: 'Page number must be greater than 0',
-      });
+      return SendError(res, 'Page number must be greater than 0', 400);
     }
 
     if (limit < 1 || limit > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Limit must be between 1 and 100',
-      });
+      return SendError(res, 'Limit must be between 1 and 100', 400);
     }
 
     const result = await amenityService.getAllAmenities({ page, limit });
 
-    res.status(200).json({
-      success: true,
-      message: 'Amenities retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Amenities retrieved successfully', result.data, 200, {
       pagination: {
         total: result.total,
         page: result.page,
@@ -68,11 +52,7 @@ export const getAllAmenities = async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving amenities',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving amenities', 500, error);
   }
 };
 
@@ -81,17 +61,9 @@ export const getAllAmenitiesWithoutPagination = async (req: Request, res: Respon
   try {
     const amenities = await amenityService.getAllAmenitiesWithoutPagination();
 
-    res.status(200).json({
-      success: true,
-      message: 'Amenities retrieved successfully',
-      data: amenities,
-    });
+    return SendSuccess(res, 'Amenities retrieved successfully', amenities);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving amenities',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving amenities', 500, error);
   }
 };
 
@@ -102,18 +74,10 @@ export const getAmenityById = async (req: Request, res: Response) => {
 
     const amenity = await amenityService.getAmenityById(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Amenity retrieved successfully',
-      data: amenity,
-    });
+    return SendSuccess(res, 'Amenity retrieved successfully', amenity);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving amenity',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving amenity', statusCode, error);
   }
 };
 
@@ -121,7 +85,7 @@ export const getAmenityById = async (req: Request, res: Response) => {
 export const updateAmenity = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, icon,isActive } = req.body;
+    const { name, description, icon, isActive } = req.body;
 
     const amenity = await amenityService.updateAmenity(id, {
       name,
@@ -130,25 +94,16 @@ export const updateAmenity = async (req: Request, res: Response) => {
       icon
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Amenity updated successfully',
-      data: amenity,
-    });
+    return SendSuccess(res, 'Amenity updated successfully', amenity);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('already exists')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating amenity',
-      error: error.message,
-    });
+        ? 409
+        : 500;
+    return SendError(res, 'Error updating amenity', statusCode, error);
   }
 };
-
 
 // Delete amenity
 export const deleteAmenity = async (req: Request, res: Response) => {
@@ -157,20 +112,9 @@ export const deleteAmenity = async (req: Request, res: Response) => {
 
     await amenityService.deleteAmenity(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Amenity deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Amenity deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting amenity',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting amenity', statusCode, error);
   }
 };
-
-
-

@@ -12,7 +12,7 @@ import { authenticateToken } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { createRoomTypeSchema, updateRoomTypeSchema, paginationSchema } from '../validators/roomType.validator';
 
-const router = Router();
+const router: Router = Router();
 
 // Protected room type routes with validation
 

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { HousekeepingLogService } from '../services/housekeepingLogService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const hkService = new HousekeepingLogService();
 
@@ -29,18 +30,10 @@ export const createHousekeepingLog = async (req: Request, res: Response) => {
       notes,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Housekeeping log created successfully',
-      data: log,
-    });
+    return SendSuccess(res, 'Housekeeping log created successfully', log, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating housekeeping log',
-      error: error.message,
-    });
+    return SendError(res, 'Error creating housekeeping log', statusCode, error);
   }
 };
 
@@ -52,21 +45,14 @@ export const getAllHousekeepingLogs = async (req: Request, res: Response) => {
 
     const result = await hkService.getAllPaginated(page, limit, search);
 
-    res.status(200).json({
-      success: true,
-      message: 'Housekeeping logs retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Housekeeping logs retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
     });
   } catch (error: any) {
     const statusCode = error.message.includes('must be') ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving housekeeping logs',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving housekeeping logs', statusCode, error);
   }
 };
 
@@ -74,18 +60,10 @@ export const getHousekeepingLogById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const log = await hkService.getById(id);
-    res.status(200).json({
-      success: true,
-      message: 'Housekeeping log retrieved successfully',
-      data: log,
-    });
+    return SendSuccess(res, 'Housekeeping log retrieved successfully', log);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving housekeeping log',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving housekeeping log', statusCode, error);
   }
 };
 
@@ -116,18 +94,10 @@ export const updateHousekeepingLog = async (req: Request, res: Response) => {
       notes,
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Housekeeping log updated successfully',
-      data: log,
-    });
+    return SendSuccess(res, 'Housekeeping log updated successfully', log);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating housekeeping log',
-      error: error.message,
-    });
+    return SendError(res, 'Error updating housekeeping log', statusCode, error);
   }
 };
 
@@ -135,17 +105,9 @@ export const deleteHousekeepingLog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await hkService.deleteLog(id);
-    res.status(200).json({
-      success: true,
-      message: 'Housekeeping log deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Housekeeping log deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting housekeeping log',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting housekeeping log', statusCode, error);
   }
 };

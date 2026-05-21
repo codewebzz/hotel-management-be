@@ -11,7 +11,10 @@
     "build:serve": "npm run build && npm run serve",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "ts-node src/database/run-seeders.ts",
-    "seed:build": "tsc && node dist/database/run-seeders.js"
+    "seed:build": "tsc && node dist/database/run-seeders.js",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/database.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/config/database.ts",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/config/database.ts"
   },
   "keywords": [
     "nodejs",

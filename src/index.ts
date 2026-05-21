@@ -114,6 +114,7 @@ app.use((err: any, req: Request, res: Response) => {
 const startServer = async () => {
   try {
     await AppDataSource.initialize();
+    await AppDataSource.runMigrations();
     console.log('Database connected successfully');
 
     app.listen(PORT, () => {

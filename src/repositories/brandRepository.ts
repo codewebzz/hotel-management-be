@@ -26,8 +26,7 @@ export class BrandRepository {
     search?: string
   ): Promise<{ data: Brand[]; total: number; page: number; limit: number }> {
     let query = this.repository.createQueryBuilder('brand')
-      .leftJoinAndSelect('brand.address', 'address')
-      .leftJoinAndSelect('brand.branch', 'branch');
+      .leftJoinAndSelect('brand.address', 'address');
 
     if (search && search.trim()) {
       query = query.where('brand.name ILIKE :search', { search: `%${search}%` });
@@ -49,7 +48,6 @@ export class BrandRepository {
     return await this.repository
       .createQueryBuilder('brand')
       .leftJoinAndSelect('brand.address', 'address')
-      .leftJoinAndSelect('brand.branch', 'branch')
       .where('brand.id = :id', { id })
       .getOne();
   }
@@ -96,6 +94,25 @@ export class BrandRepository {
       throw new Error('Brand not found');
     }
     await this.repository.remove(brand);
+  }
+
+  /**
+   * Find all brands belonging to a specific company
+   */
+  async findByCompanyId(
+    companyId: string,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<{ data: Brand[]; total: number }> {
+    const [data, total] = await this.repository
+      .createQueryBuilder('brand')
+      .leftJoinAndSelect('brand.address', 'address')
+      .where('brand.companyId = :companyId', { companyId })
+      .orderBy('brand.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { data, total };
   }
 
   /**

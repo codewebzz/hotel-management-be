@@ -16,7 +16,7 @@ import {
 } from "../validators/amenity.validator";
 import { authenticateToken } from "../middleware/auth";
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

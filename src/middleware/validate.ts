@@ -1,5 +1,6 @@
 import { ZodObject } from 'zod';
 import { Request, Response, NextFunction } from 'express';
+import { SendError } from '../utils/response';
 
 export const validate = (schema: ZodObject, target: 'body' | 'query' = 'body') => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -12,9 +13,7 @@ export const validate = (schema: ZodObject, target: 'body' | 'query' = 'body') =
       return next();
     }
 
-    return res.status(400).json({
-      success: false,
-      message: 'Validation error',
+    return SendError(res, 'Validation error', 400, null, {
       errors: parsed.error.format(),
     });
   };

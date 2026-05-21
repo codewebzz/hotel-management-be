@@ -26,7 +26,7 @@ const options = {
       schemas: {
         Brand: {
           type: 'object',
-          required: ['name', 'email', 'branchId'],
+          required: ['name', 'email'],
           properties: {
             id: {
               type: 'string',
@@ -56,11 +56,6 @@ const options = {
               description: 'Brand address',
               example: '123 Business Street, Suite 100',
             },
-            branchId: {
-              type: 'string',
-              format: 'uuid',
-              description: 'ID of the branch this brand belongs to',
-            },
             isActive: {
               type: 'boolean',
               description: 'Whether the brand is active',
@@ -80,7 +75,7 @@ const options = {
         },
         Branch: {
           type: 'object',
-          required: ['name'],
+          required: ['name', 'brandId'],
           properties: {
             id: {
               type: 'string',
@@ -91,6 +86,11 @@ const options = {
               type: 'string',
               description: 'Branch name',
               example: 'Downtown Branch',
+            },
+            brandId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID of the brand this branch belongs to',
             },
             description: {
               type: 'string',

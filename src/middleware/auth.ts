@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { SendError } from '../utils/response';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -15,20 +16,14 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'Access token is required',
-    });
+    return SendError(res, 'Access token is required', 401);
   }
 
   const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
   jwt.verify(token, jwtSecret, (err: any, decoded: any) => {
     if (err) {
-      return res.status(403).json({
-        success: false,
-        message: 'Invalid or expired token',
-      });
+      return SendError(res, 'Invalid or expired token', 403);
     }
 
     req.user = decoded;
@@ -39,17 +34,11 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 export const authorizeRoles = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required',
-      });
+      return SendError(res, 'Authentication required', 401);
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Insufficient permissions',
-      });
+      return SendError(res, 'Insufficient permissions', 403);
     }
 
     next();

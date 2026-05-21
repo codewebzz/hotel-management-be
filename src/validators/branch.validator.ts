@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createBranchSchema = z.object({
   name: z.string().min(3),
+  brandId: z.string().uuid("Brand ID must be a valid UUID"),
   address: z.string().optional(),
   lat: z.number().optional(),
   long: z.number().optional(),
@@ -9,6 +10,7 @@ export const createBranchSchema = z.object({
 
 export const updateBranchSchema = z.object({
   name: z.string().min(1).optional(),
+  brandId: z.string().uuid("Brand ID must be a valid UUID").optional(),
   address: z.string().optional(),
   lat: z.number().optional(),
   long: z.number().optional(),

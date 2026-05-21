@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { CompanyService } from "../services/companyService";
 import { AppDataSource } from "../config/database";
 import { Address } from "../entities/Address";
+import { SendSuccess, SendError } from "../utils/response";
 
 const companyService = new CompanyService();
 
@@ -27,17 +28,10 @@ export const createCompany = async (req: Request, res: Response) => {
       addressId: finalAddressId,
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Company created successfully",
-    });
+    return SendSuccess(res, "Company created successfully", undefined, 201);
   } catch (error: any) {
     const statusCode = error.message.includes("already exists") ? 409 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error creating company",
-      error: error.message,
-    });
+    return SendError(res, "Error creating company", statusCode, error);
   }
 };
 
@@ -53,10 +47,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
       search
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Companies retrieved successfully",
-      data: result.data,
+    return SendSuccess(res, "Companies retrieved successfully", result.data, 200, {
       pagination: {
         total: result.total,
         page: result.page,
@@ -66,11 +57,7 @@ export const getAllCompanies = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     const statusCode = error.message.includes("must be") ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error retrieving companies",
-      error: error.message,
-    });
+    return SendError(res, "Error retrieving companies", statusCode, error);
   }
 };
 
@@ -81,18 +68,10 @@ export const getCompanyById = async (req: Request, res: Response) => {
 
     const company = await companyService.getCompanyById(id);
 
-    res.status(200).json({
-      success: true,
-      message: "Company retrieved successfully",
-      data: company,
-    });
+    return SendSuccess(res, "Company retrieved successfully", company);
   } catch (error: any) {
     const statusCode = error.message.includes("not found") ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error retrieving company",
-      error: error.message,
-    });
+    return SendError(res, "Error retrieving company", statusCode, error);
   }
 };
 
@@ -106,7 +85,7 @@ export const updateCompany = async (req: Request, res: Response) => {
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
+        return SendError(res, "Invalid email format", 400);
       }
     }
 
@@ -124,22 +103,14 @@ export const updateCompany = async (req: Request, res: Response) => {
       AppDataSource
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Company updated successfully",
-      data: company,
-    });
+    return SendSuccess(res, "Company updated successfully", company);
   } catch (error: any) {
     const statusCode = error.message.includes("not found")
       ? 404
       : error.message.includes("already exists")
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error updating company",
-      error: error.message,
-    });
+        ? 409
+        : 500;
+    return SendError(res, "Error updating company", statusCode, error);
   }
 };
 
@@ -150,18 +121,10 @@ export const deleteCompany = async (req: Request, res: Response) => {
 
     await companyService.deleteCompany(id);
 
-    res.status(200).json({
-      success: true,
-      message: "Company deleted successfully",
-      data: { id },
-    });
+    return SendSuccess(res, "Company deleted successfully", { id });
   } catch (error: any) {
     const statusCode = error.message.includes("not found") ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error deleting company",
-      error: error.message,
-    });
+    return SendError(res, "Error deleting company", statusCode, error);
   }
 };
 
@@ -170,17 +133,9 @@ export const getActiveCompanies = async (req: Request, res: Response) => {
   try {
     const companies = await companyService.getActiveCompanies();
 
-    res.status(200).json({
-      success: true,
-      message: "Active companies retrieved successfully",
-      data: companies,
-    });
+    return SendSuccess(res, "Active companies retrieved successfully", companies);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: "Error retrieving active companies",
-      error: error.message,
-    });
+    return SendError(res, "Error retrieving active companies", 500, error);
   }
 };
 
@@ -191,17 +146,9 @@ export const toggleCompanyStatus = async (req: Request, res: Response) => {
 
     const company = await companyService.toggleCompanyStatus(id);
 
-    res.status(200).json({
-      success: true,
-      message: `Company ${company.isActive ? "activated" : "deactivated"} successfully`,
-      data: company,
-    });
+    return SendSuccess(res, `Company ${company.isActive ? "activated" : "deactivated"} successfully`, company);
   } catch (error: any) {
     const statusCode = error.message.includes("not found") ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: "Error changing company status",
-      error: error.message,
-    });
+    return SendError(res, "Error changing company status", statusCode, error);
   }
 };

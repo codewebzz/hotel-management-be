@@ -16,7 +16,7 @@ import {
   paginationSchema,
 } from '../validators/roomTypeAmenity.validator';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

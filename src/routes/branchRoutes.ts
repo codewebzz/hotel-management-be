@@ -7,6 +7,7 @@ import {
   deleteBranch,
   getActiveBranches,
   toggleBranchStatus,
+  getBranchesByBrand,
 } from "../controllers/branchController";
 import { authenticateToken } from "../middleware/auth";
 import { validate } from "../middleware/validate";
@@ -16,7 +17,7 @@ import {
   paginationSchema,
 } from "../validators/branch.validator";
 
-const router = Router();
+const router: Router = Router();
 
 // Protected branch routes with validation
 
@@ -71,9 +72,14 @@ router.get("/", authenticateToken, validate(paginationSchema, "query"), getAllBr
  *             type: object
  *             required:
  *               - name
+ *               - brandId
  *             properties:
  *               name:
  *                 type: string
+ *               brandId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the parent brand
  *               address:
  *                 type: string
  *                 description: Full address string to create an Address record
@@ -110,6 +116,10 @@ router.post(
  *         description: All active branches retrieved successfully
  */
 router.get("/all", authenticateToken, getActiveBranches);
+
+// Lazy load: branches belonging to a specific brand
+router.get("/by-brand/:brandId", authenticateToken, getBranchesByBrand);
+
 
 /**
  * @swagger
@@ -158,6 +168,10 @@ router.get("/:id", authenticateToken, getBranchById);
  *             properties:
  *               name:
  *                 type: string
+ *               brandId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the parent brand
  *               address:
  *                 type: string
  *                 description: Full address string (if address changes, it will update the Address record)
@@ -230,4 +244,3 @@ router.put("/:id/change-status", authenticateToken, toggleBranchStatus);
 
 export default router;
 
- 

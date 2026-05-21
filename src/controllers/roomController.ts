@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { RoomService } from '../services/roomService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const roomService = new RoomService();
 
@@ -16,7 +17,7 @@ export const createRoom = async (req: Request, res: Response) => {
     } = req.body;
 
     if (!roomNumber) {
-      return res.status(400).json({ message: 'Room number is required' });
+      return SendError(res, 'Room number is required', 400);
     }
 
     const room = await roomService.createRoom({
@@ -29,22 +30,14 @@ export const createRoom = async (req: Request, res: Response) => {
       branchId,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Room created successfully',
-      data: room,
-    });
+    return SendSuccess(res, 'Room created successfully', room, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('already exists')
       ? 409
       : error.message.includes('not found')
-      ? 404
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating room',
-      error: error.message,
-    });
+        ? 404
+        : 500;
+    return SendError(res, 'Error creating room', statusCode, error);
   }
 };
 
@@ -56,21 +49,14 @@ export const getAllRooms = async (req: Request, res: Response) => {
 
     const result = await roomService.getAllRoomsPaginated(page, limit, search);
 
-    res.status(200).json({
-      success: true,
-      message: 'Rooms retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Rooms retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
     });
   } catch (error: any) {
     const statusCode = error.message.includes('must be') ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving rooms',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving rooms', statusCode, error);
   }
 };
 
@@ -80,18 +66,10 @@ export const getRoomById = async (req: Request, res: Response) => {
 
     const room = await roomService.getRoomById(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Room retrieved successfully',
-      data: room,
-    });
+    return SendSuccess(res, 'Room retrieved successfully', room);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving room',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving room', statusCode, error);
   }
 };
 
@@ -120,22 +98,14 @@ export const updateRoom = async (req: Request, res: Response) => {
       isActive,
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Room updated successfully',
-      data: room,
-    });
+    return SendSuccess(res, 'Room updated successfully', room);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('already exists')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating room',
-      error: error.message,
-    });
+        ? 409
+        : 500;
+    return SendError(res, 'Error updating room', statusCode, error);
   }
 };
 
@@ -145,18 +115,10 @@ export const deleteRoom = async (req: Request, res: Response) => {
 
     await roomService.deleteRoom(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Room deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Room deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting room',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting room', statusCode, error);
   }
 };
 
@@ -164,17 +126,9 @@ export const getActiveRooms = async (req: Request, res: Response) => {
   try {
     const rooms = await roomService.getActiveRooms();
 
-    res.status(200).json({
-      success: true,
-      message: 'Active rooms retrieved successfully',
-      data: rooms,
-    });
+    return SendSuccess(res, 'Active rooms retrieved successfully', rooms);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving active rooms',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving active rooms', 500, error);
   }
 };
 
@@ -184,18 +138,9 @@ export const toggleRoomStatus = async (req: Request, res: Response) => {
 
     const room = await roomService.toggleRoomStatus(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Room status toggled successfully',
-      data: room,
-    });
+    return SendSuccess(res, 'Room status toggled successfully', room);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error toggling room status',
-      error: error.message,
-    });
+    return SendError(res, 'Error toggling room status', statusCode, error);
   }
 };
-

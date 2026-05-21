@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { CustomerService } from '../services/customerService';
 import { AppDataSource } from '../config/database';
 import { Address } from '../entities/Address';
+import { SendSuccess, SendError } from '../utils/response';
 
 const customerService = new CustomerService();
 
@@ -36,25 +37,16 @@ export const createCustomer = async (req: Request, res: Response) => {
       idType,
       idNumber,
       companyId,
-      
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Customer created successfully',
-      data: customer,
-    });
+    return SendSuccess(res, 'Customer created successfully', customer, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('already exists')
       ? 409
       : error.message.includes('not found')
-      ? 404
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating customer',
-      error: error.message,
-    });
+        ? 404
+        : 500;
+    return SendError(res, 'Error creating customer', statusCode, error);
   }
 };
 
@@ -70,21 +62,14 @@ export const getAllCustomers = async (req: Request, res: Response) => {
       search
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Customers retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Customers retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
     });
   } catch (error: any) {
     const statusCode = error.message.includes('must be') ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving customers',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving customers', statusCode, error);
   }
 };
 
@@ -94,18 +79,10 @@ export const getCustomerById = async (req: Request, res: Response) => {
 
     const customer = await customerService.getCustomerById(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Customer retrieved successfully',
-      data: customer,
-    });
+    return SendSuccess(res, 'Customer retrieved successfully', customer);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving customer',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving customer', statusCode, error);
   }
 };
 
@@ -142,24 +119,16 @@ export const updateCustomer = async (req: Request, res: Response) => {
       AppDataSource
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Customer updated successfully',
-      data: customer,
-    });
+    return SendSuccess(res, 'Customer updated successfully', customer);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('already exists')
-      ? 409
-      : error.message.includes('must be')
-      ? 400
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating customer',
-      error: error.message,
-    });
+        ? 409
+        : error.message.includes('must be')
+          ? 400
+          : 500;
+    return SendError(res, 'Error updating customer', statusCode, error);
   }
 };
 
@@ -169,18 +138,10 @@ export const deleteCustomer = async (req: Request, res: Response) => {
 
     await customerService.deleteCustomer(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Customer deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Customer deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting customer',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting customer', statusCode, error);
   }
 };
 
@@ -188,17 +149,9 @@ export const getActiveCustomers = async (req: Request, res: Response) => {
   try {
     const customers = await customerService.getActiveCustomers();
 
-    res.status(200).json({
-      success: true,
-      message: 'Active customers retrieved successfully',
-      data: customers,
-    });
+    return SendSuccess(res, 'Active customers retrieved successfully', customers);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving active customers',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving active customers', 500, error);
   }
 };
 
@@ -208,17 +161,9 @@ export const toggleCustomerStatus = async (req: Request, res: Response) => {
 
     const customer = await customerService.toggleCustomerStatus(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Customer status toggled successfully',
-      data: customer,
-    });
+    return SendSuccess(res, 'Customer status toggled successfully', customer);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error toggling customer status',
-      error: error.message,
-    });
+    return SendError(res, 'Error toggling customer status', statusCode, error);
   }
 };

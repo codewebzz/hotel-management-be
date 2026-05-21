@@ -1,5 +1,6 @@
 import { BranchRepository } from '../repositories/branchRepository';
 import { Branch } from '../entities/Branch';
+import { AppDataSource } from '../config/database';
 
 export class BranchService {
   private branchRepository: BranchRepository;
@@ -9,31 +10,32 @@ export class BranchService {
   }
 
   /**
-   * Create a new branch
+   * Create a new branch (requires brandId)
    */
   async createBranch(branchData: {
     name: string;
+    brandId: string;
     addressId?: string;
   }): Promise<Branch> {
-    // Check if branch name already exists
-    const existingBranch = await this.branchRepository.findByName(
-      branchData.name
-    );
+    const existingBranch = await this.branchRepository.findByName(branchData.name);
     if (existingBranch) {
       throw new Error("Branch with this name already exists");
     }
 
-    const branch = await this.branchRepository.create({
+    const brandRepository = AppDataSource.getRepository('Brand');
+    const brandExists = await brandRepository.findOne({
+      where: { id: branchData.brandId },
+    });
+    if (!brandExists) {
+      throw new Error('Brand not found');
+    }
+
+    return await this.branchRepository.create({
       ...branchData,
       isActive: true,
     });
-
-    return branch;
   }
 
-  /**
-   * Get all branches with pagination
-   */
   async getAllBranchesPaginated(
     page: number = 1,
     limit: number = 10,
@@ -45,7 +47,6 @@ export class BranchService {
     limit: number;
     totalPages: number;
   }> {
-    // Validate pagination parameters
     if (page < 1) {
       throw new Error("Page must be greater than 0");
     }
@@ -60,9 +61,14 @@ export class BranchService {
     };
   }
 
-  /**
-   * Get branch by ID
-   */
+  async getBranchesByBrandId(
+    brandId: string,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<{ data: Branch[]; total: number }> {
+    return await this.branchRepository.findByBrandId(brandId, page, limit);
+  }
+
   async getBranchById(id: string): Promise<Branch> {
     const branch = await this.branchRepository.findById(id);
     if (!branch) {
@@ -71,13 +77,11 @@ export class BranchService {
     return branch;
   }
 
-  /**
-   * Update branch
-   */
   async updateBranch(
     id: string,
     updateData: {
       name?: string;
+      brandId?: string;
       addressId?: string;
       isActive?: boolean;
       address?: string;
@@ -86,25 +90,31 @@ export class BranchService {
     },
     AppDataSource?: any
   ): Promise<Branch> {
-    // Check if branch exists
     const existingBranch = await this.branchRepository.findById(id);
     if (!existingBranch) {
       throw new Error("Branch not found");
     }
 
-    // If name is being updated, check if new name already exists
     if (updateData.name && updateData.name !== existingBranch.name) {
-      const nameExists = await this.branchRepository.existsByName(
-        updateData.name
-      );
+      const nameExists = await this.branchRepository.existsByName(updateData.name);
       if (nameExists) {
         throw new Error("Branch with this name already exists");
       }
     }
 
-    // Handle address update if provided
-    const branchUpdateData: any = {
+    if (updateData.brandId && updateData.brandId !== existingBranch.brandId) {
+      const brandRepository = AppDataSource.getRepository('Brand');
+      const brandExists = await brandRepository.findOne({
+        where: { id: updateData.brandId },
+      });
+      if (!brandExists) {
+        throw new Error('Brand not found');
+      }
+    }
+
+    const branchUpdateData: Partial<Branch> = {
       name: updateData.name,
+      brandId: updateData.brandId,
       isActive: updateData.isActive,
     };
 
@@ -118,7 +128,6 @@ export class BranchService {
         const addressRepo = AppDataSource.getRepository(Address);
 
         if (existingBranch.addressId) {
-          // Update existing address
           await addressRepo.update(existingBranch.addressId, {
             address: updateData.address,
             lat:
@@ -127,7 +136,6 @@ export class BranchService {
               updateData.long !== undefined ? Number(updateData.long) : undefined,
           });
         } else {
-          // Create new address if branch didn't have one
           const addressEntity = addressRepo.create({
             address: updateData.address,
             lat: updateData.lat !== undefined ? Number(updateData.lat) : 0,
@@ -144,9 +152,6 @@ export class BranchService {
     return await this.branchRepository.update(id, branchUpdateData);
   }
 
-  /**
-   * Delete branch
-   */
   async deleteBranch(id: string): Promise<void> {
     const branch = await this.branchRepository.findById(id);
     if (!branch) {
@@ -155,18 +160,11 @@ export class BranchService {
     await this.branchRepository.delete(id);
   }
 
-  /**
-   * Get active branches
-   */
   async getActiveBranches(): Promise<Pick<Branch, "id" | "name">[]> {
     return await this.branchRepository.findActive();
   }
 
-  /**
-   * Toggle branch status
-   */
   async toggleBranchStatus(id: string): Promise<Branch> {
     return await this.branchRepository.toggleStatus(id);
   }
 }
-

@@ -15,7 +15,7 @@ import {
   paginationSchema,
 } from '../validators/booking.validator';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/all', authenticateToken, getConfirmedBooking);
 

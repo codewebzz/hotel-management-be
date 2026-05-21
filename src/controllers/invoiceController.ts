@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { InvoiceService } from '../services/invoiceService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const invoiceService = new InvoiceService();
 
@@ -25,22 +26,14 @@ export const createInvoice = async (req: Request, res: Response) => {
       paidAmount,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Invoice created successfully',
-      data: invoice,
-    });
+    return SendSuccess(res, 'Invoice created successfully', invoice, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('already exists')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating invoice',
-      error: error.message,
-    });
+        ? 409
+        : 500;
+    return SendError(res, 'Error creating invoice', statusCode, error);
   }
 };
 
@@ -56,21 +49,14 @@ export const getAllInvoices = async (req: Request, res: Response) => {
       search
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Invoices retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Invoices retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
     });
   } catch (error: any) {
     const statusCode = error.message.includes('must be') ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving invoices',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving invoices', statusCode, error);
   }
 };
 
@@ -78,18 +64,10 @@ export const getInvoiceById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const invoice = await invoiceService.getInvoiceById(id);
-    res.status(200).json({
-      success: true,
-      message: 'Invoice retrieved successfully',
-      data: invoice,
-    });
+    return SendSuccess(res, 'Invoice retrieved successfully', invoice);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving invoice',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving invoice', statusCode, error);
   }
 };
 
@@ -116,22 +94,14 @@ export const updateInvoice = async (req: Request, res: Response) => {
       paidAmount,
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Invoice updated successfully',
-      data: invoice,
-    });
+    return SendSuccess(res, 'Invoice updated successfully', invoice);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('must be')
-      ? 400
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating invoice',
-      error: error.message,
-    });
+        ? 400
+        : 500;
+    return SendError(res, 'Error updating invoice', statusCode, error);
   }
 };
 
@@ -139,18 +109,9 @@ export const deleteInvoice = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await invoiceService.deleteInvoice(id);
-    res.status(200).json({
-      success: true,
-      message: 'Invoice deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Invoice deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting invoice',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting invoice', statusCode, error);
   }
 };
-

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { RoomTypeAmenityService } from '../services/roomTypeAmenityService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const service = new RoomTypeAmenityService();
 
@@ -11,22 +12,14 @@ export const createRoomTypeAmenity = async (req: Request, res: Response) => {
       amenityId,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'RoomTypeAmenity created successfully',
-      data: entity,
-    });
+    return SendSuccess(res, 'RoomTypeAmenity created successfully', entity, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('already exists')
       ? 409
       : error.message.includes('not found')
-      ? 404
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating RoomTypeAmenity',
-      error: error.message,
-    });
+        ? 404
+        : 500;
+    return SendError(res, 'Error creating RoomTypeAmenity', statusCode, error);
   }
 };
 
@@ -45,10 +38,7 @@ export const getAllRoomTypeAmenities = async (
       search
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'RoomTypeAmenities retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'RoomTypeAmenities retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
@@ -57,11 +47,7 @@ export const getAllRoomTypeAmenities = async (
     const statusCode = error.message.includes('must be')
       ? 400
       : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving RoomTypeAmenities',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving RoomTypeAmenities', statusCode, error);
   }
 };
 
@@ -72,18 +58,10 @@ export const getRoomTypeAmenityById = async (
   try {
     const { id } = req.params;
     const entity = await service.getRoomTypeAmenityById(id);
-    res.status(200).json({
-      success: true,
-      message: 'RoomTypeAmenity retrieved successfully',
-      data: entity,
-    });
+    return SendSuccess(res, 'RoomTypeAmenity retrieved successfully', entity);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving RoomTypeAmenity',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving RoomTypeAmenity', statusCode, error);
   }
 };
 
@@ -99,22 +77,14 @@ export const updateRoomTypeAmenity = async (
       amenityId,
       isActive,
     });
-    res.status(200).json({
-      success: true,
-      message: 'RoomTypeAmenity updated successfully',
-      data: entity,
-    });
+    return SendSuccess(res, 'RoomTypeAmenity updated successfully', entity);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('already exists')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating RoomTypeAmenity',
-      error: error.message,
-    });
+        ? 409
+        : 500;
+    return SendError(res, 'Error updating RoomTypeAmenity', statusCode, error);
   }
 };
 
@@ -124,17 +94,9 @@ export const getActiveRoomTypeAmenities = async (
 ) => {
   try {
     const list = await service.getActiveRoomTypeAmenities();
-    res.status(200).json({
-      success: true,
-      message: 'Active RoomTypeAmenities retrieved successfully',
-      data: list,
-    });
+    return SendSuccess(res, 'Active RoomTypeAmenities retrieved successfully', list);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving active RoomTypeAmenities',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving active RoomTypeAmenities', 500, error);
   }
 };
 
@@ -145,18 +107,10 @@ export const toggleRoomTypeAmenityStatus = async (
   try {
     const { id } = req.params;
     const entity = await service.toggleRoomTypeAmenityStatus(id);
-    res.status(200).json({
-      success: true,
-      message: 'RoomTypeAmenity status toggled successfully',
-      data: entity,
-    });
+    return SendSuccess(res, 'RoomTypeAmenity status toggled successfully', entity);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error toggling RoomTypeAmenity status',
-      error: error.message,
-    });
+    return SendError(res, 'Error toggling RoomTypeAmenity status', statusCode, error);
   }
 };
 
@@ -167,17 +121,9 @@ export const deleteRoomTypeAmenity = async (
   try {
     const { id } = req.params;
     await service.deleteRoomTypeAmenity(id);
-    res.status(200).json({
-      success: true,
-      message: 'RoomTypeAmenity deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'RoomTypeAmenity deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting RoomTypeAmenity',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting RoomTypeAmenity', statusCode, error);
   }
 };

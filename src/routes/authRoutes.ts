@@ -3,7 +3,7 @@ import {  login, saveUser } from '../controllers/userController';
 import { validate } from '../middleware/validate';
 import { loginSchema, registerSchema } from '../validators/auth.validator';
 
-const router = Router();
+const router: Router = Router();
 
 
 /**

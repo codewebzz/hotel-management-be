@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Address } from './Address';
-import { Branch } from './Branch';
+import { Company } from './Company';
 
 @Entity('brands')
 export class Brand {
@@ -23,12 +31,12 @@ export class Brand {
   @JoinColumn({ name: 'addressId' })
   address?: Address;
 
-  @Column({ type: 'uuid', nullable: false })
-  branchId!: string;
+  @Column({ type: 'uuid' })
+  companyId!: string;
 
-  @ManyToOne(() => Branch, { eager: false, nullable: false })
-  @JoinColumn({ name: 'branchId' })
-  branch!: Branch;
+  @ManyToOne(() => Company, (company) => company.brands, { eager: false, nullable: false })
+  @JoinColumn({ name: 'companyId' })
+  company!: Company;
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;

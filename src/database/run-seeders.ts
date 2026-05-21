@@ -1,16 +1,19 @@
 import "reflect-metadata";
 import { seedAdminUser } from "./seeders/admin.user.seeder";
 import { seedCompanies } from "./seeders/company.seeder";
+import { seedBrands } from "./seeders/brand.seeder";
 import { seedBranches } from "./seeders/branch.seeder";
 import { AppDataSource } from "../config/database";
 
 async function runSeeders() {
   try {
     await AppDataSource.initialize();
+    await AppDataSource.runMigrations();
     console.log("📦 Database connected");
 
     await seedAdminUser();
     await seedCompanies(4);
+    await seedBrands(4);
     await seedBranches(8);
     console.log("🌱 Seeders executed successfully");
     process.exit(0);

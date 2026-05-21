@@ -33,6 +33,7 @@ export class BranchRepository {
       const [data, total] = await this.repository
         .createQueryBuilder("branch")
         .leftJoinAndSelect("branch.address", "address")
+        .leftJoinAndSelect("branch.brand", "brand")
         .where("branch.name ILIKE :query", { query: `%${search}%` })
         .orderBy("branch.createdAt", "DESC")
         .skip(offset)
@@ -47,7 +48,7 @@ export class BranchRepository {
       order: { createdAt: "DESC" },
       skip: offset,
       take: limit,
-      relations: ["address"],
+      relations: ["address", "brand"],
     });
 
     return { data, total, page, limit };
@@ -57,7 +58,10 @@ export class BranchRepository {
    * Find branch by ID
    */
   async findById(id: string): Promise<Branch | null> {
-    return await this.repository.findOne({ where: { id } });
+    return await this.repository.findOne({
+      where: { id },
+      relations: ["address", "brand"],
+    });
   }
 
   /**
@@ -95,6 +99,25 @@ export class BranchRepository {
       throw new Error("Branch not found");
     }
     await this.repository.remove(branch);
+  }
+
+  /**
+   * Find branches by brandId (for lazy nested table loading)
+   */
+  async findByBrandId(
+    brandId: string,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<{ data: Branch[]; total: number }> {
+    const [data, total] = await this.repository
+      .createQueryBuilder('branch')
+      .leftJoinAndSelect('branch.address', 'address')
+      .where('branch.brandId = :brandId', { brandId })
+      .orderBy('branch.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+    return { data, total };
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { BookingService } from '../services/bookingService';
+import { SendSuccess, SendError } from '../utils/response';
 
 const bookingService = new BookingService();
 
@@ -35,24 +36,16 @@ export const createBooking = async (req: Request, res: Response) => {
       specialRequests,
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'Booking created successfully',
-      data: booking,
-    });
+    return SendSuccess(res, 'Booking created successfully', booking, 201);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('must be before')
-      ? 400
-      : error.message.includes('not available')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error creating booking',
-      error: error.message,
-    });
+        ? 400
+        : error.message.includes('not available')
+          ? 409
+          : 500;
+    return SendError(res, 'Error creating booking', statusCode, error);
   }
 };
 
@@ -68,21 +61,14 @@ export const getAllBookings = async (req: Request, res: Response) => {
       search
     );
 
-    res.status(200).json({
-      success: true,
-      message: 'Bookings retrieved successfully',
-      data: result.data,
+    return SendSuccess(res, 'Bookings retrieved successfully', result.data, 200, {
       total: result.total,
       page: result.page,
       limit: result.limit,
     });
   } catch (error: any) {
     const statusCode = error.message.includes('must be') ? 400 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving bookings',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving bookings', statusCode, error);
   }
 };
 
@@ -92,18 +78,10 @@ export const getBookingById = async (req: Request, res: Response) => {
 
     const booking = await bookingService.getBookingById(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Booking retrieved successfully',
-      data: booking,
-    });
+    return SendSuccess(res, 'Booking retrieved successfully', booking);
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error retrieving booking',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving booking', statusCode, error);
   }
 };
 
@@ -140,24 +118,16 @@ export const updateBooking = async (req: Request, res: Response) => {
       specialRequests,
     });
 
-    res.status(200).json({
-      success: true,
-      message: 'Booking updated successfully',
-      data: booking,
-    });
+    return SendSuccess(res, 'Booking updated successfully', booking);
   } catch (error: any) {
     const statusCode = error.message.includes('not found')
       ? 404
       : error.message.includes('must be before')
-      ? 400
-      : error.message.includes('not available')
-      ? 409
-      : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error updating booking',
-      error: error.message,
-    });
+        ? 400
+        : error.message.includes('not available')
+          ? 409
+          : 500;
+    return SendError(res, 'Error updating booking', statusCode, error);
   }
 };
 
@@ -167,18 +137,10 @@ export const deleteBooking = async (req: Request, res: Response) => {
 
     await bookingService.deleteBooking(id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Booking deleted successfully',
-      data: { id },
-    });
+    return SendSuccess(res, 'Booking deleted successfully', { id });
   } catch (error: any) {
     const statusCode = error.message.includes('not found') ? 404 : 500;
-    res.status(statusCode).json({
-      success: false,
-      message: 'Error deleting booking',
-      error: error.message,
-    });
+    return SendError(res, 'Error deleting booking', statusCode, error);
   }
 };
 
@@ -186,16 +148,8 @@ export const getConfirmedBooking = async (req: Request, res: Response) => {
   try {
     const bookings = await bookingService.getConfirmedBookings();
 
-    res.status(200).json({
-      success: true,
-      message: 'Confirmed bookings retrieved successfully',
-      data: bookings,
-    });
+    return SendSuccess(res, 'Confirmed bookings retrieved successfully', bookings);
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: 'Error retrieving confirmed bookings',
-      error: error.message,
-    });
+    return SendError(res, 'Error retrieving confirmed bookings', 500, error);
   }
 };

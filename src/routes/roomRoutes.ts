@@ -16,7 +16,7 @@ import {
   paginationSchema,
 } from '../validators/room.validator';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * @swagger

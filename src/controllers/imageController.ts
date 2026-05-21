@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { Multer } from 'multer';
 import { imageValidator, uploadSingleImageSchema, uploadMultipleImagesSchema, imageFilenameSchema } from '../utils/imageValidator';
+import { SendSuccess, SendError } from '../utils/response';
 
 /**
  * Image controller for handling image uploads and management
@@ -26,26 +27,19 @@ export class ImageController {
   /**
    * Upload a single image
    */
-  async uploadImage(req: Request, res: Response): Promise<void> {
+  async uploadImage(req: Request, res: Response) {
     try {
       if (!req.file) {
-        res.status(400).json({
-          success: false,
-          message: 'No file uploaded',
-        });
-        return;
+        return SendError(res, 'No file uploaded', 400);
       }
 
       // Validate file using zod schema
       const validation = uploadSingleImageSchema.safeParse({ file: req.file });
       console.log("Validation result:", validation);
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: 'File validation failed',
-          errors :"error",
+        return SendError(res, 'File validation failed', 400, null, {
+          errors: "error",
         });
-        return;
       }
 
       const { file } = req;
@@ -59,51 +53,35 @@ export class ImageController {
 
       const imageUrl = `/uploads/${filename}`;
 
-      res.status(200).json({
-        success: true,
-        message: 'Image uploaded successfully',
-        data: {
-          filename,
-          size: file.size,
-          mimetype: file.mimetype,
-          url: imageUrl,
-          path: filepath,
-        },
+      return SendSuccess(res, 'Image uploaded successfully', {
+        filename,
+        size: file.size,
+        mimetype: file.mimetype,
+        url: imageUrl,
+        path: filepath,
       });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error uploading image',
-        error: error.message,
-      });
+      return SendError(res, 'Error uploading image', 500, error);
     }
   }
 
   /**
    * Upload multiple images
    */
-  async uploadMultipleImages(req: Request, res: Response): Promise<void> {
+  async uploadMultipleImages(req: Request, res: Response) {
     try {
       const files = req.files as Express.Multer.File[] | undefined;
 
       if (!files || files.length === 0) {
-        res.status(400).json({
-          success: false,
-          message: 'No files uploaded',
-        });
-        return;
+        return SendError(res, 'No files uploaded', 400);
       }
 
       // Validate all files using zod schema
       const validation = uploadMultipleImagesSchema.safeParse({ files });
       if (!validation.success) {
-        const errors = "error";
-        res.status(400).json({
-          success: false,
-          message: 'File validation failed',
-          errors,
+        return SendError(res, 'File validation failed', 400, null, {
+          errors: "error",
         });
-        return;
       }
 
       const uploadedImages: any[] = [];
@@ -133,182 +111,130 @@ export class ImageController {
         }
       }
 
-      res.status(200).json({
-        success: uploadedImages.length > 0,
-        message: uploadedImages.length > 0 ? 'Images uploaded successfully' : 'Failed to upload images',
-        data: {
+      const isSuccess = uploadedImages.length > 0;
+      const responseCode = isSuccess ? 200 : 400;
+      return SendSuccess(
+        res,
+        isSuccess ? 'Images uploaded successfully' : 'Failed to upload images',
+        {
           uploaded: uploadedImages,
           failed: errors,
           total: files.length,
           successCount: uploadedImages.length,
           failureCount: errors.length,
         },
-      });
+        responseCode
+      );
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error uploading images',
-        error: error.message,
-      });
+      return SendError(res, 'Error uploading images', 500, error);
     }
   }
 
   /**
    * Get image by filename
    */
-  async getImage(req: Request, res: Response): Promise<void> {
+  async getImage(req: Request, res: Response) {
     try {
       const { filename } = req.params;
 
       // Validate filename using zod schema
       const validation = imageFilenameSchema.safeParse({ filename });
       if (!validation.success) {
-        const errors ="error";
-        res.status(400).json({
-          success: false,
-          message: 'Invalid filename',
-          errors,
+        return SendError(res, 'Invalid filename', 400, null, {
+          errors: "error",
         });
-        return;
       }
 
       const filepath = path.join(this.uploadDir, filename);
 
       if (!fs.existsSync(filepath)) {
-        res.status(404).json({
-          success: false,
-          message: 'Image not found',
-        });
-        return;
+        return SendError(res, 'Image not found', 404);
       }
 
       res.sendFile(filepath);
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error retrieving image',
-        error: error.message,
-      });
+      return SendError(res, 'Error retrieving image', 500, error);
     }
   }
 
   /**
    * Delete image
    */
-  async deleteImage(req: Request, res: Response): Promise<void> {
+  async deleteImage(req: Request, res: Response) {
     try {
       const { filename } = req.params;
 
       // Validate filename using zod schema
       const validation = imageFilenameSchema.safeParse({ filename });
       if (!validation.success) {
-        const errors = "error";
-        res.status(400).json({
-          success: false,
-          message: 'Invalid filename',
-          errors,
+        return SendError(res, 'Invalid filename', 400, null, {
+          errors: "error",
         });
-        return;
       }
 
       const filepath = path.join(this.uploadDir, filename);
 
       if (!fs.existsSync(filepath)) {
-        res.status(404).json({
-          success: false,
-          message: 'Image not found',
-        });
-        return;
+        return SendError(res, 'Image not found', 404);
       }
 
       fs.unlinkSync(filepath);
 
-      res.status(200).json({
-        success: true,
-        message: 'Image deleted successfully',
-        data: { filename },
-      });
+      return SendSuccess(res, 'Image deleted successfully', { filename });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error deleting image',
-        error: error.message,
-      });
+      return SendError(res, 'Error deleting image', 500, error);
     }
   }
 
   /**
    * Get image info
    */
-  async getImageInfo(req: Request, res: Response): Promise<void> {
+  async getImageInfo(req: Request, res: Response) {
     try {
       const { filename } = req.params;
 
       // Validate filename using zod schema
       const validation = imageFilenameSchema.safeParse({ filename });
       if (!validation.success) {
-        res.status(400).json({
-          success: false,
-          message: 'Invalid filename',
+        return SendError(res, 'Invalid filename', 400, null, {
           errors: "error",
         });
-        return;
       }
 
       const filepath = path.join(this.uploadDir, filename);
 
       if (!fs.existsSync(filepath)) {
-        res.status(404).json({
-          success: false,
-          message: 'Image not found',
-        });
-        return;
+        return SendError(res, 'Image not found', 404);
       }
 
       const stats = fs.statSync(filepath);
 
-      res.status(200).json({
-        success: true,
-        message: 'Image info retrieved successfully',
-        data: {
-          filename,
-          size: stats.size,
-          createdAt: stats.birthtime,
-          updatedAt: stats.mtime,
-          url: `/uploads/${filename}`,
-        },
+      return SendSuccess(res, 'Image info retrieved successfully', {
+        filename,
+        size: stats.size,
+        createdAt: stats.birthtime,
+        updatedAt: stats.mtime,
+        url: `/uploads/${filename}`,
       });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error retrieving image info',
-        error: error.message,
-      });
+      return SendError(res, 'Error retrieving image info', 500, error);
     }
   }
 
   /**
    * List all uploaded images
    */
-  async listImages(req: Request, res: Response): Promise<void> {
+  async listImages(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
       if (page < 1) {
-        res.status(400).json({
-          success: false,
-          message: 'Page number must be greater than 0',
-        });
-        return;
+        return SendError(res, 'Page number must be greater than 0', 400);
       }
 
       if (limit < 1 || limit > 100) {
-        res.status(400).json({
-          success: false,
-          message: 'Limit must be between 1 and 100',
-        });
-        return;
+        return SendError(res, 'Limit must be between 1 and 100', 400);
       }
 
       const files = fs.readdirSync(this.uploadDir);
@@ -329,10 +255,7 @@ export class ImageController {
         };
       });
 
-      res.status(200).json({
-        success: true,
-        message: 'Images retrieved successfully',
-        data: imageData,
+      return SendSuccess(res, 'Images retrieved successfully', imageData, 200, {
         pagination: {
           total,
           page,
@@ -341,11 +264,7 @@ export class ImageController {
         },
       });
     } catch (error: any) {
-      res.status(500).json({
-        success: false,
-        message: 'Error retrieving images',
-        error: error.message,
-      });
+      return SendError(res, 'Error retrieving images', 500, error);
     }
   }
 }

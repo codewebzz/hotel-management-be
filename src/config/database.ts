@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { Brand } from "../entities/Brand";
 import { Branch } from "../entities/Branch";
@@ -15,6 +16,7 @@ import { Invoice } from "../entities/Invoice";
 import { Staff } from "../entities/Staff";
 import { HousekeepingLog } from "../entities/HousekeepingLog";
 import dotenv from "dotenv";
+import path from "path";
 
 dotenv.config();
 
@@ -25,9 +27,25 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || "postgres",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_NAME || "hello_db",
-  synchronize: true,
+  synchronize: false,
   logging: false,
-  migrations: [],
-  entities: [User, Brand, Branch, Amenity, RoomType, RoomTypeAmenity, Company, Address, Room, Pricing, Customer, Booking, Invoice, Staff, HousekeepingLog],
+  entities: [
+    User,
+    Brand,
+    Branch,
+    Amenity,
+    RoomType,
+    RoomTypeAmenity,
+    Company,
+    Address,
+    Room,
+    Pricing,
+    Customer,
+    Booking,
+    Invoice,
+    Staff,
+    HousekeepingLog,
+  ],
+  migrations: [path.join(__dirname, "../migrations/*.{ts,js}")],
   subscribers: [],
 });

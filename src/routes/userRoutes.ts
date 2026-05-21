@@ -14,7 +14,7 @@ import { authenticateToken, authorizeRoles } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { paginationSchema, registerSchema } from '../validators/auth.validator';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/all', authenticateToken, getActiveUsers);
 

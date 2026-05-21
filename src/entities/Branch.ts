@@ -8,6 +8,8 @@ import {
   JoinColumn,
 } from "typeorm";
 import { Address } from "./Address";
+import { Brand } from "./Brand";
+
 @Entity("branches")
 export class Branch {
   @PrimaryGeneratedColumn("uuid")
@@ -22,6 +24,13 @@ export class Branch {
   @ManyToOne(() => Address, { eager: false, nullable: true })
   @JoinColumn({ name: "addressId" })
   address?: Address;
+
+  @Column({ type: "uuid", nullable: false })
+  brandId!: string;
+
+  @ManyToOne(() => Brand, { eager: false, nullable: false })
+  @JoinColumn({ name: "brandId" })
+  brand!: Brand;
 
   @Column({ type: "boolean", default: true })
   isActive!: boolean;

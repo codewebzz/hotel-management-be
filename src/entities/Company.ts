@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Address } from './Address';
+import { Brand } from './Brand';
 
 @Entity('companies')
 export class Company {
@@ -21,6 +22,9 @@ export class Company {
   @ManyToOne(() => Address, { eager: false, nullable: true })
   @JoinColumn({ name: 'addressId' })
   address?: Address;
+
+  @OneToMany(() => Brand, (brand) => brand.company)
+  brands!: Brand[];
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;
