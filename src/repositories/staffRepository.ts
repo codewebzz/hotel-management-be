@@ -17,20 +17,24 @@ export class StaffRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{ data: Staff[]; total: number; page: number; limit: number }> {
     const offset = (page - 1) * limit;
 
     let query = this.repository
       .createQueryBuilder('staff')
-      .leftJoinAndSelect('staff.user', 'user')
-      .leftJoinAndSelect('staff.branch', 'branch');
+      .leftJoinAndSelect('staff.user', 'user');
 
     if (search && search.trim() !== '') {
       query = query.where(
         'user.name ILIKE :q OR staff.position ILIKE :q OR staff.shiftTiming ILIKE :q',
         { q: `%${search}%` }
       );
+    }
+
+    if (branchId) {
+      query = query.andWhere('user.branchId = :branchId', { branchId });
     }
 
     const [data, total] = await query
@@ -46,14 +50,13 @@ export class StaffRepository {
     return await this.repository
       .createQueryBuilder('staff')
       .leftJoinAndSelect('staff.user', 'user')
-      .leftJoinAndSelect('staff.branch', 'branch')
       .where('staff.id = :id', { id })
       .getOne();
   }
 
-  async findByUserInBranch(userId: string, branchId: string): Promise<Staff | null> {
+  async findByUser(userId: string): Promise<Staff | null> {
     return await this.repository.findOne({
-      where: { userId, branchId },
+      where: { userId },
     });
   }
 

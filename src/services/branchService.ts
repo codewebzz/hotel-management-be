@@ -160,7 +160,7 @@ export class BranchService {
     await this.branchRepository.delete(id);
   }
 
-  async getActiveBranches(): Promise<Pick<Branch, "id" | "name">[]> {
+  async getActiveBranches(): Promise<Branch[]> {
     return await this.branchRepository.findActive();
   }
 

@@ -96,6 +96,7 @@ export class BookingService {
     page: number = 1,
     limit: number = 10,
     search?: string,
+    branchId?: string,
   ): Promise<{
     data: Booking[];
     total: number;
@@ -109,7 +110,7 @@ export class BookingService {
     if (limit < 1 || limit > 100) {
       throw new Error("Limit must be between 1 and 100");
     }
-    const result = await this.repo.findAllPaginated(page, limit, search);
+    const result = await this.repo.findAllPaginated(page, limit, search, branchId);
     return { ...result, totalPages: Math.ceil(result.total / limit) };
   }
 

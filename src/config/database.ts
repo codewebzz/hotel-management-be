@@ -9,6 +9,7 @@ import { Company } from "../entities/Company";
 import { User } from "../entities/User";
 import { Address } from "../entities/Address";
 import { Room } from "../entities/Room";
+import { Floor } from "../entities/Floor";
 import { Pricing } from "../entities/Pricing";
 import { Customer } from "../entities/Customer";
 import { Booking } from "../entities/Booking";
@@ -38,6 +39,7 @@ export const AppDataSource = new DataSource({
     RoomTypeAmenity,
     Company,
     Address,
+    Floor,
     Room,
     Pricing,
     Customer,

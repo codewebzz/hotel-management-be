@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Company } from './Company';
+import { Branch } from './Branch';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -34,6 +35,13 @@ export class User {
   @ManyToOne(() => Company, { nullable: true })
   @JoinColumn({ name: 'companyId' })
   company?: Company;
+
+  @Column({ type: 'uuid', nullable: true })
+  branchId?: string;
+
+  @ManyToOne(() => Branch, { nullable: true })
+  @JoinColumn({ name: 'branchId' })
+  branch?: Branch;
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;

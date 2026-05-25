@@ -42,8 +42,9 @@ export const getAllHousekeepingLogs = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const branchId = req.query.branchId as string | undefined;
 
-    const result = await hkService.getAllPaginated(page, limit, search);
+    const result = await hkService.getAllPaginated(page, limit, search, branchId);
 
     return SendSuccess(res, 'Housekeeping logs retrieved successfully', result.data, 200, {
       total: result.total,

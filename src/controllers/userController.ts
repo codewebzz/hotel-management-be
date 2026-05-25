@@ -9,7 +9,7 @@ const userService = new UserService();
 // Register a new user
 export const saveUser = async (req: Request, res: Response) => {
   try {
-    const { email, name, password, role, companyId } = req.body;
+    const { email, name, password, role, companyId, branchId } = req.body;
     console.log("Akshita", req.body)
     if (!email || !name || !password) {
       return SendError(res, 'Email, name, and password are required', 400);
@@ -32,6 +32,7 @@ export const saveUser = async (req: Request, res: Response) => {
       password,
       role: role as UserRole,
       companyId,
+      branchId,
     });
 
     // Generate JWT token
@@ -40,6 +41,7 @@ export const saveUser = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      branchId: user.branchId,
     });
 
     return SendSuccess(res, 'User added successfully', {
@@ -69,6 +71,7 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
       companyId: user.companyId,
+      branchId: user.branchId,
     });
 
     return SendSuccess(res, 'Login successful', {
@@ -118,7 +121,7 @@ export const getUserById = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, email, password, role, companyId, isActive } = req.body;
+    const { name, email, password, role, companyId, branchId, isActive } = req.body;
 
     // Validate email if provided
     if (email) {
@@ -139,6 +142,7 @@ export const updateUser = async (req: Request, res: Response) => {
       password,
       role: role as UserRole,
       companyId,
+      branchId,
       isActive,
     });
 

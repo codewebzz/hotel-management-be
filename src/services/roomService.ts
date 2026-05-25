@@ -12,7 +12,7 @@ export class RoomService {
   async createRoom(data: {
     roomNumber: string;
     roomTypeId: string;
-    floor?: number;
+    floorId?: string;
     notes?: string;
     companyId: string;
     brandId: string;
@@ -34,6 +34,16 @@ export class RoomService {
     });
     if (!roomType) {
       throw new Error('RoomType not found');
+    }
+
+    if (data.floorId) {
+      const floorRepository = AppDataSource.getRepository('Floor');
+      const floor = await floorRepository.findOne({
+        where: { id: data.floorId },
+      });
+      if (!floor) {
+        throw new Error('Floor not found');
+      }
     }
 
     const companyRepository = AppDataSource.getRepository('Company');
@@ -63,7 +73,7 @@ export class RoomService {
     const room = await this.repo.create({
       roomNumber: data.roomNumber,
       roomTypeId: data.roomTypeId,
-      floor: data.floor,
+      floorId: data.floorId,
       notes: data.notes,
       companyId: data.companyId,
       brandId: data.brandId,
@@ -77,7 +87,8 @@ export class RoomService {
   async getAllRoomsPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{
     data: Room[];
     total: number;
@@ -92,7 +103,7 @@ export class RoomService {
       throw new Error('Limit must be between 1 and 100');
     }
 
-    const result = await this.repo.findAllPaginated(page, limit, search);
+    const result = await this.repo.findAllPaginated(page, limit, search, branchId);
     return {
       ...result,
       totalPages: Math.ceil(result.total / limit),
@@ -112,7 +123,7 @@ export class RoomService {
     data: {
       roomNumber?: string;
       roomTypeId?: string;
-      floor?: number;
+      floorId?: string;
       notes?: string;
       companyId?: string;
       brandId?: string;
@@ -153,6 +164,16 @@ export class RoomService {
       }
     }
 
+    if (data.floorId) {
+      const floorRepository = AppDataSource.getRepository('Floor');
+      const floor = await floorRepository.findOne({
+        where: { id: data.floorId },
+      });
+      if (!floor) {
+        throw new Error('Floor not found');
+      }
+    }
+
     if (data.companyId) {
       const companyRepository = AppDataSource.getRepository('Company');
       const company = await companyRepository.findOne({
@@ -186,7 +207,7 @@ export class RoomService {
     const updateData: Partial<Room> = {
       roomNumber: data.roomNumber,
       roomTypeId: data.roomTypeId,
-      floor: data.floor,
+      floorId: data.floorId,
       notes: data.notes,
       companyId: data.companyId,
       brandId: data.brandId,
@@ -208,5 +229,125 @@ export class RoomService {
   async toggleRoomStatus(id: string): Promise<Room> {
     return await this.repo.toggleStatus(id);
   }
+
+  async createRoomsBulk(
+    rooms: {
+      roomNumber: string;
+      roomTypeId: string;
+      floorId?: string;
+      floor?: number;
+      notes?: string;
+      companyId: string;
+      brandId: string;
+      branchId: string;
+    }[]
+  ): Promise<Room[]> {
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const createdRooms: Room[] = [];
+      const roomTypeRepository = queryRunner.manager.getRepository('RoomType');
+      const companyRepository = queryRunner.manager.getRepository('Company');
+      const brandRepository = queryRunner.manager.getRepository('Brand');
+      const branchRepository = queryRunner.manager.getRepository('Branch');
+      const floorRepository = queryRunner.manager.getRepository('Floor');
+
+      // Cache floors during bulk creation to avoid repeated DB calls
+      const floorCache: Record<string, string> = {};
+
+      for (const roomData of rooms) {
+        const exists = await this.repo.existsByRoomNumberInBranch(
+          roomData.roomNumber,
+          roomData.branchId
+        );
+        if (exists) {
+          throw new Error(
+            `Room number ${roomData.roomNumber} already exists in this branch`
+          );
+        }
+
+        const roomType = await roomTypeRepository.findOne({
+          where: { id: roomData.roomTypeId },
+        });
+        if (!roomType) {
+          throw new Error(`RoomType not found for room ${roomData.roomNumber}`);
+        }
+
+        const company = await companyRepository.findOne({
+          where: { id: roomData.companyId },
+        });
+        if (!company) {
+          throw new Error(`Company not found for room ${roomData.roomNumber}`);
+        }
+
+        const brand = await brandRepository.findOne({
+          where: { id: roomData.brandId },
+        });
+        if (!brand) {
+          throw new Error(`Brand not found for room ${roomData.roomNumber}`);
+        }
+
+        const branch = await branchRepository.findOne({
+          where: { id: roomData.branchId },
+        });
+        if (!branch) {
+          throw new Error(`Branch not found for room ${roomData.roomNumber}`);
+        }
+
+        let resolvedFloorId = roomData.floorId;
+
+        // If floor number is provided but no floorId, resolve or create the floor
+        if (!resolvedFloorId && roomData.floor !== undefined && roomData.floor !== null) {
+          const cacheKey = `${roomData.branchId}-${roomData.floor}`;
+          if (floorCache[cacheKey]) {
+            resolvedFloorId = floorCache[cacheKey];
+          } else {
+            let floorEntity = await floorRepository.findOne({
+              where: { branchId: roomData.branchId, floorNumber: roomData.floor }
+            });
+
+            if (!floorEntity) {
+              const newFloor = floorRepository.create({
+                floorNumber: roomData.floor,
+                name: `Floor ${roomData.floor}`,
+                companyId: roomData.companyId,
+                brandId: roomData.brandId,
+                branchId: roomData.branchId,
+                isActive: true
+              });
+              floorEntity = await floorRepository.save(newFloor);
+            }
+            resolvedFloorId = floorEntity.id;
+            floorCache[cacheKey] = floorEntity.id;
+          }
+        }
+
+        const room = queryRunner.manager.create(Room, {
+          roomNumber: roomData.roomNumber,
+          roomTypeId: roomData.roomTypeId,
+          floorId: resolvedFloorId,
+          notes: roomData.notes,
+          companyId: roomData.companyId,
+          brandId: roomData.brandId,
+          branchId: roomData.branchId,
+          isActive: true,
+        });
+
+        const savedRoom = await queryRunner.manager.save(room);
+        createdRooms.push(savedRoom);
+      }
+
+      await queryRunner.commitTransaction();
+      return createdRooms;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
+
 

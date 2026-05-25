@@ -31,7 +31,7 @@ export class Brand {
   @JoinColumn({ name: 'addressId' })
   address?: Address;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: false })
   companyId!: string;
 
   @ManyToOne(() => Company, (company) => company.brands, { eager: false, nullable: false })

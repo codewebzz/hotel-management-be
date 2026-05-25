@@ -11,7 +11,6 @@ export class StaffService {
 
   async createStaff(data: {
     userId: string;
-    branchId: string;
     position: string;
     salary: number;
     joinDate: string;
@@ -23,20 +22,13 @@ export class StaffService {
       throw new Error('User not found');
     }
 
-    const branchRepo = AppDataSource.getRepository('Branch');
-    const branch = await branchRepo.findOne({ where: { id: data.branchId } });
-    if (!branch) {
-      throw new Error('Branch not found');
-    }
-
-    const dup = await this.repo.findByUserInBranch(data.userId, data.branchId);
+    const dup = await this.repo.findByUser(data.userId);
     if (dup) {
-      throw new Error('Staff with this user already exists in this branch');
+      throw new Error('Staff with this user already exists');
     }
 
     const entity = await this.repo.create({
       userId: data.userId,
-      branchId: data.branchId,
       position: data.position,
       salary: data.salary,
       joinDate: data.joinDate,
@@ -49,7 +41,8 @@ export class StaffService {
   async getAllStaffPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{ data: Staff[]; total: number; page: number; limit: number; totalPages: number }> {
     if (page < 1) {
       throw new Error('Page must be greater than 0');
@@ -57,7 +50,7 @@ export class StaffService {
     if (limit < 1 || limit > 100) {
       throw new Error('Limit must be between 1 and 100');
     }
-    const result = await this.repo.findAllPaginated(page, limit, search);
+    const result = await this.repo.findAllPaginated(page, limit, search, branchId);
     return { ...result, totalPages: Math.ceil(result.total / limit) };
   }
 
@@ -73,7 +66,6 @@ export class StaffService {
     id: string,
     data: {
       userId?: string;
-      branchId?: string;
       position?: string;
       salary?: number;
       joinDate?: string;
@@ -87,11 +79,10 @@ export class StaffService {
     }
 
     const nextUserId = data.userId ?? existing.userId;
-    const nextBranchId = data.branchId ?? existing.branchId;
-    if (nextUserId !== existing.userId || nextBranchId !== existing.branchId) {
-      const duplicate = await this.repo.findByUserInBranch(nextUserId, nextBranchId);
+    if (nextUserId !== existing.userId) {
+      const duplicate = await this.repo.findByUser(nextUserId);
       if (duplicate && duplicate.id !== id) {
-        throw new Error('Staff with this user already exists in this branch');
+        throw new Error('Staff with this user already exists');
       }
     }
 
@@ -102,17 +93,9 @@ export class StaffService {
         throw new Error('User not found');
       }
     }
-    if (data.branchId) {
-      const branchRepo = AppDataSource.getRepository('Branch');
-      const branch = await branchRepo.findOne({ where: { id: data.branchId } });
-      if (!branch) {
-        throw new Error('Branch not found');
-      }
-    }
 
     const updateData: Partial<Staff> = {
       userId: data.userId,
-      branchId: data.branchId,
       position: data.position,
       salary: data.salary,
       joinDate: data.joinDate,

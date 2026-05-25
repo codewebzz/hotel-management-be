@@ -8,7 +8,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './User';
-import { Branch } from './Branch';
 
 @Entity('staff')
 export class Staff {
@@ -21,13 +20,6 @@ export class Staff {
   @ManyToOne(() => User, { eager: false, nullable: false })
   @JoinColumn({ name: 'userId' })
   user!: User;
-
-  @Column({ type: 'uuid' })
-  branchId!: string;
-
-  @ManyToOne(() => Branch, { eager: false, nullable: false })
-  @JoinColumn({ name: 'branchId' })
-  branch!: Branch;
 
   @Column({ type: 'varchar', length: 100 })
   position!: string;

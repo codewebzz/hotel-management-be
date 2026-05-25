@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { RoomService } from '../services/roomService';
 import { SendSuccess, SendError } from '../utils/response';
+import { AppDataSource } from '../config/database';
+import { Branch } from '../entities/Branch';
 
 const roomService = new RoomService();
 
@@ -9,10 +11,8 @@ export const createRoom = async (req: Request, res: Response) => {
     const {
       roomNumber,
       roomTypeId,
-      floor,
+      floorId,
       notes,
-      companyId,
-      brandId,
       branchId,
     } = req.body;
 
@@ -20,14 +20,35 @@ export const createRoom = async (req: Request, res: Response) => {
       return SendError(res, 'Room number is required', 400);
     }
 
+    const resolvedBranchId = branchId || (req as any).user?.branchId;
+    if (!resolvedBranchId) {
+      return SendError(res, 'Branch ID is required', 400);
+    }
+
+    const branch = await AppDataSource.getRepository(Branch).findOne({
+      where: { id: resolvedBranchId },
+      relations: ['brand'],
+    });
+
+    if (!branch) {
+      return SendError(res, 'Branch not found', 404);
+    }
+
+    const resolvedBrandId = branch.brandId;
+    const resolvedCompanyId = branch.brand?.companyId;
+
+    if (!resolvedBrandId || !resolvedCompanyId) {
+      return SendError(res, 'Could not resolve brand or company for this branch', 400);
+    }
+
     const room = await roomService.createRoom({
       roomNumber,
       roomTypeId,
-      floor,
+      floorId,
       notes,
-      companyId,
-      brandId,
-      branchId,
+      companyId: resolvedCompanyId,
+      brandId: resolvedBrandId,
+      branchId: resolvedBranchId,
     });
 
     return SendSuccess(res, 'Room created successfully', room, 201);
@@ -46,8 +67,9 @@ export const getAllRooms = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const branchId = req.query.branchId as string | undefined;
 
-    const result = await roomService.getAllRoomsPaginated(page, limit, search);
+    const result = await roomService.getAllRoomsPaginated(page, limit, search, branchId);
 
     return SendSuccess(res, 'Rooms retrieved successfully', result.data, 200, {
       total: result.total,
@@ -79,7 +101,7 @@ export const updateRoom = async (req: Request, res: Response) => {
     const {
       roomNumber,
       roomTypeId,
-      floor,
+      floorId,
       notes,
       companyId,
       brandId,
@@ -90,7 +112,7 @@ export const updateRoom = async (req: Request, res: Response) => {
     const room = await roomService.updateRoom(id, {
       roomNumber,
       roomTypeId,
-      floor,
+      floorId,
       notes,
       companyId,
       brandId,
@@ -144,3 +166,59 @@ export const toggleRoomStatus = async (req: Request, res: Response) => {
     return SendError(res, 'Error toggling room status', statusCode, error);
   }
 };
+
+export const createRoomsBulk = async (req: Request, res: Response) => {
+  try {
+    const { rooms, branchId } = req.body;
+
+    if (!rooms || !Array.isArray(rooms) || rooms.length === 0) {
+      return SendError(res, 'At least one room is required', 400);
+    }
+
+    const resolvedBranchId = branchId || (req as any).user?.branchId;
+    if (!resolvedBranchId) {
+      return SendError(res, 'Branch ID is required (not found in request or user profile context)', 400);
+    }
+
+    const branch = await AppDataSource.getRepository(Branch).findOne({
+      where: { id: resolvedBranchId },
+      relations: ['brand'],
+    });
+
+    if (!branch) {
+      return SendError(res, 'Branch not found', 404);
+    }
+
+    const resolvedBrandId = branch.brandId;
+    const resolvedCompanyId = branch.brand?.companyId;
+
+    if (!resolvedBrandId || !resolvedCompanyId) {
+      return SendError(res, 'Could not resolve brand or company for user branch context', 400);
+    }
+
+    // Map through rooms and attach resolved branchId, brandId, and companyId
+    const processedRooms = rooms.map((room: any) => ({
+      ...room,
+      branchId: resolvedBranchId,
+      brandId: resolvedBrandId,
+      companyId: resolvedCompanyId,
+    }));
+
+    const createdRooms = await roomService.createRoomsBulk(processedRooms);
+
+    return SendSuccess(
+      res,
+      'Rooms created successfully in bulk',
+      createdRooms,
+      201
+    );
+  } catch (error: any) {
+    const statusCode = error.message.includes('already exists')
+      ? 409
+      : error.message.includes('not found')
+        ? 404
+        : 500;
+    return SendError(res, 'Error creating rooms in bulk', statusCode, error);
+  }
+};
+

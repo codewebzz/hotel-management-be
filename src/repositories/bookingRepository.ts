@@ -18,6 +18,7 @@ export class BookingRepository {
     page: number = 1,
     limit: number = 10,
     search?: string,
+    branchId?: string,
   ): Promise<{ data: Booking[]; total: number; page: number; limit: number }> {
     const offset = (page - 1) * limit;
 
@@ -32,6 +33,10 @@ export class BookingRepository {
         "booking.bookingNumber ILIKE :q OR customer.name ILIKE :q",
         { q: `%${search}%` },
       );
+    }
+
+    if (branchId) {
+      query = query.andWhere("booking.branchId = :branchId", { branchId });
     }
 
     const [data, total] = await query

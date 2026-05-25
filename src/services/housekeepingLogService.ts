@@ -62,7 +62,8 @@ export class HousekeepingLogService {
   async getAllPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{ data: HousekeepingLog[]; total: number; page: number; limit: number; totalPages: number }> {
     if (page < 1) {
       throw new Error('Page must be greater than 0');
@@ -70,7 +71,7 @@ export class HousekeepingLogService {
     if (limit < 1 || limit > 100) {
       throw new Error('Limit must be between 1 and 100');
     }
-    const result = await this.repo.findAllPaginated(page, limit, search);
+    const result = await this.repo.findAllPaginated(page, limit, search, branchId);
     return { ...result, totalPages: Math.ceil(result.total / limit) };
   }
 

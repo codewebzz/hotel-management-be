@@ -121,14 +121,13 @@ export class BranchRepository {
   }
 
   /**
-   * Find active branches for dropdown - only id and name
+   * Find active branches for selector - loads brand and company relations
    */
-  async findActive(): Promise<Pick<Branch, "id" | "name">[]> {
+  async findActive(): Promise<Branch[]> {
     return await this.repository.find({
       where: { isActive: true },
       order: { createdAt: "DESC" },
-      select: ["id", "name"],
-      relations: [],
+      relations: ["brand", "brand.company"],
     });
   }
 

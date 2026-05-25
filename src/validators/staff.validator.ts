@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const createStaffSchema = z.object({
   userId: z.string().uuid('User ID must be a valid UUID'),
-  branchId: z.string().uuid('Branch ID must be a valid UUID'),
   position: z.string().min(1, 'Position is required').max(100),
   salary: z.coerce.number().positive('Salary must be greater than 0'),
   joinDate: z.string().min(1, 'Join date is required'),
@@ -11,7 +10,6 @@ export const createStaffSchema = z.object({
 
 export const updateStaffSchema = z.object({
   userId: z.string().uuid('User ID must be a valid UUID').optional(),
-  branchId: z.string().uuid('Branch ID must be a valid UUID').optional(),
   position: z.string().min(1).max(100).optional(),
   salary: z.coerce.number().positive().optional(),
   joinDate: z.string().optional(),

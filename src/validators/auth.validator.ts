@@ -11,6 +11,7 @@ export const registerSchema = z.object({
   password: z.string().min(6),
   role: z.string().optional(),
   companyId: z.string().uuid().optional(),
+  branchId: z.string().uuid().optional(),
 });
 
 export const paginationSchema = z.object({

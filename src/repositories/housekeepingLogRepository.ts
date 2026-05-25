@@ -17,7 +17,8 @@ export class HousekeepingLogRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{ data: HousekeepingLog[]; total: number; page: number; limit: number }> {
     const offset = (page - 1) * limit;
 
@@ -32,6 +33,10 @@ export class HousekeepingLogRepository {
         'room.roomNumber ILIKE :q OR staff.position ILIKE :q OR hk.status ILIKE :q',
         { q: `%${search}%` }
       );
+    }
+
+    if (branchId) {
+      query = query.andWhere('hk.branchId = :branchId', { branchId });
     }
 
     const [data, total] = await query

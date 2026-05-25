@@ -7,8 +7,8 @@ const service = new RoomTypeService();
 
 export const createRoomType = async (req: Request, res: Response) => {
   try {
-    const { name, description, branchId } = req.body;
-    const rt = await service.createRoomType({ name, description, branchId });
+    const { name, description, branchId, amenityIds } = req.body;
+    const rt = await service.createRoomType({ name, description, branchId, amenityIds });
     return SendSuccess(res, 'RoomType created successfully', rt, 201);
   } catch (err: any) {
     const status = err.message.includes('already exists') ? 409 : err.message.includes('not found') ? 404 : 500;
@@ -21,7 +21,8 @@ export const getAllRoomTypes = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
-    const result = await service.getAllRoomTypesPaginated(page, limit, search);
+    const branchId = req.query.branchId as string | undefined;
+    const result = await service.getAllRoomTypesPaginated(page, limit, search, branchId);
     return SendSuccess(res, 'RoomTypes retrieved successfully', result.data, 200, {
       pagination: {
         total: result.total,
@@ -50,8 +51,8 @@ export const getRoomTypeById = async (req: Request, res: Response) => {
 export const updateRoomType = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, branchId, isActive } = req.body;
-    const rt = await service.updateRoomType(id, { name, description, branchId, isActive }, AppDataSource);
+    const { name, description, branchId, isActive, amenityIds } = req.body;
+    const rt = await service.updateRoomType(id, { name, description, branchId, isActive, amenityIds }, AppDataSource);
     return SendSuccess(res, 'RoomType updated successfully', rt);
   } catch (err: any) {
     const status = err.message.includes('not found') ? 404 : err.message.includes('already exists') ? 409 : 500;

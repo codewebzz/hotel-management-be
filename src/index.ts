@@ -19,7 +19,7 @@ import invoiceRoutes from './routes/invoiceRoutes';
 import staffRoutes from './routes/staffRoutes';
 import housekeepingLogRoutes from './routes/housekeepingLogRoutes';
 import imageRoutes from './routes/imageRoutes';
-
+import floorRoutes from './routes/floorRoutes';
 import { authenticateToken } from './middleware/auth';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -74,6 +74,7 @@ app.use(
   roomTypeAmenityRoutes
 );
 app.use('/api/rooms', authenticateToken, roomRoutes);
+app.use('/api/floors', authenticateToken, floorRoutes);
 app.use('/api/pricings', authenticateToken, pricingRoutes);
 app.use('/api/customers', authenticateToken, customerRoutes);
 app.use('/api/bookings', authenticateToken, bookingRoutes);

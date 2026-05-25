@@ -4,6 +4,7 @@ export const createRoomTypeSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   branchId: z.string().uuid(),
+  amenityIds: z.array(z.string().uuid()).optional(),
 });
 
 export const updateRoomTypeSchema = z.object({
@@ -11,6 +12,7 @@ export const updateRoomTypeSchema = z.object({
   description: z.string().optional(),
   branchId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  amenityIds: z.array(z.string().uuid()).optional(),
 });
 
 export const paginationSchema = z.object({

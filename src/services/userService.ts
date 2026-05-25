@@ -19,6 +19,7 @@ export class UserService {
     password: string;
     role?: UserRole;
     companyId?: string;
+    branchId?: string;
   }): Promise<User> {
     // Check if user email already exists
     const existingUser = await this.userRepository.findByEmail(userData.email);
@@ -102,6 +103,7 @@ export class UserService {
       password?: string;
       role?: UserRole;
       companyId?: string;
+      branchId?: string;
       isActive?: boolean;
     },
   ): Promise<User> {

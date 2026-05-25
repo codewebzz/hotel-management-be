@@ -17,7 +17,8 @@ export class RoomRepository {
   async findAllPaginated(
     page: number = 1,
     limit: number = 10,
-    search?: string
+    search?: string,
+    branchId?: string
   ): Promise<{ data: Room[]; total: number; page: number; limit: number }> {
     const offset = (page - 1) * limit;
 
@@ -26,10 +27,15 @@ export class RoomRepository {
       .leftJoinAndSelect('room.roomType', 'roomType')
       .leftJoinAndSelect('room.company', 'company')
       .leftJoinAndSelect('room.brand', 'brand')
-      .leftJoinAndSelect('room.branch', 'branch');
+      .leftJoinAndSelect('room.branch', 'branch')
+      .leftJoinAndSelect('room.floor', 'floor');
 
     if (search && search.trim() !== '') {
       query = query.where('room.roomNumber ILIKE :q', { q: `%${search}%` });
+    }
+
+    if (branchId) {
+      query = query.andWhere('room.branchId = :branchId', { branchId });
     }
 
     const [data, total] = await query
@@ -48,6 +54,7 @@ export class RoomRepository {
       .leftJoinAndSelect('room.company', 'company')
       .leftJoinAndSelect('room.brand', 'brand')
       .leftJoinAndSelect('room.branch', 'branch')
+      .leftJoinAndSelect('room.floor', 'floor')
       .where('room.id = :id', { id })
       .getOne();
   }

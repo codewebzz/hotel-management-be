@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { RoomType } from '../entities/RoomType';
 
@@ -9,46 +9,57 @@ export class RoomTypeRepository {
     this.repository = AppDataSource.getRepository(RoomType);
   }
 
-  async create(data: Partial<RoomType>): Promise<RoomType> {
-    const entity = this.repository.create(data);
-    return await this.repository.save(entity);
+  async create(data: Partial<RoomType>, manager?: EntityManager): Promise<RoomType> {
+    const repo = manager ? manager.getRepository(RoomType) : this.repository;
+    const entity = repo.create(data);
+    return await repo.save(entity);
   }
 
-  async findAllPaginated(page: number = 1, limit: number = 10, search?: string) {
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    branchId?: string
+  ) {
     const offset = (page - 1) * limit;
 
+    let query = this.repository
+      .createQueryBuilder('roomType')
+      .leftJoinAndSelect('roomType.branch', 'branch')
+      .leftJoinAndSelect('roomType.roomTypeAmenities', 'roomTypeAmenities')
+      .leftJoinAndSelect('roomTypeAmenities.amenity', 'amenity');
+
     if (search && search.trim() !== '') {
-      const [data, total] = await this.repository
-        .createQueryBuilder('roomType')
-        .leftJoinAndSelect('roomType.branch', 'branch')
-        .where('roomType.name ILIKE :q', { q: `%${search}%` })
-        .orderBy('roomType.createdAt', 'DESC')
-        .skip(offset)
-        .take(limit)
-        .getManyAndCount();
-      return { data, total, page, limit };
+      query = query.where('roomType.name ILIKE :q', { q: `%${search}%` });
     }
 
-    const [data, total] = await this.repository.findAndCount({
-      order: { createdAt: 'DESC' },
-      skip: offset,
-      take: limit,
-      relations: ['branch'],
-    });
+    if (branchId) {
+      query = query.andWhere('roomType.branchId = :branchId', { branchId });
+    }
+
+    const [data, total] = await query
+      .orderBy('roomType.createdAt', 'DESC')
+      .skip(offset)
+      .take(limit)
+      .getManyAndCount();
 
     return { data, total, page, limit };
   }
 
   async findById(id: string): Promise<RoomType | null> {
-    return await this.repository.findOne({ where: { id } });
+    return await this.repository.findOne({
+      where: { id },
+      relations: ['branch', 'roomTypeAmenities', 'roomTypeAmenities.amenity'],
+    });
   }
 
   async findByName(name: string): Promise<RoomType | null> {
     return await this.repository.findOne({ where: { name } });
   }
 
-  async update(id: string, data: Partial<RoomType>): Promise<RoomType> {
-    await this.repository.update(id, data);
+  async update(id: string, data: Partial<RoomType>, manager?: EntityManager): Promise<RoomType> {
+    const repo = manager ? manager.getRepository(RoomType) : this.repository;
+    await repo.update(id, data);
     const updated = await this.findById(id);
     if (!updated) throw new Error('RoomType not found after update');
     return updated;

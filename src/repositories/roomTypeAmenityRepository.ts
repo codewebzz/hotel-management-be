@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { RoomTypeAmenity } from '../entities/RoomTypeAmenity';
 
@@ -9,9 +9,15 @@ export class RoomTypeAmenityRepository {
     this.repository = AppDataSource.getRepository(RoomTypeAmenity);
   }
 
-  async create(data: Partial<RoomTypeAmenity>): Promise<RoomTypeAmenity> {
-    const entity = this.repository.create(data);
-    return await this.repository.save(entity);
+  async create(data: Partial<RoomTypeAmenity>, manager?: EntityManager): Promise<RoomTypeAmenity> {
+    const repo = manager ? manager.getRepository(RoomTypeAmenity) : this.repository;
+    const entity = repo.create(data);
+    return await repo.save(entity);
+  }
+
+  async deleteByRoomTypeId(roomTypeId: string, manager?: EntityManager): Promise<void> {
+    const repo = manager ? manager.getRepository(RoomTypeAmenity) : this.repository;
+    await repo.delete({ roomTypeId });
   }
 
   async findAllPaginated(

@@ -54,11 +54,13 @@ export const getAllBookings = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const branchId = req.query.branchId as string | undefined;
 
     const result = await bookingService.getAllBookingsPaginated(
       page,
       limit,
-      search
+      search,
+      branchId
     );
 
     return SendSuccess(res, 'Bookings retrieved successfully', result.data, 200, {

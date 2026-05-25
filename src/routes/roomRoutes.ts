@@ -7,13 +7,15 @@ import {
   deleteRoom,
   getActiveRooms,
   toggleRoomStatus,
+  createRoomsBulk,
 } from '../controllers/roomController';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken, injectUserBranch } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
   createRoomSchema,
   updateRoomSchema,
   paginationSchema,
+  bulkCreateRoomSchema,
 } from '../validators/room.validator';
 
 const router: Router = Router();
@@ -194,7 +196,8 @@ router.get('/', authenticateToken, validate(paginationSchema, 'query'), getAllRo
  *                 data:
  *                   $ref: '#/components/schemas/Room'
  */
-router.post('/', authenticateToken, validate(createRoomSchema, 'body'), createRoom);
+router.post('/', authenticateToken, injectUserBranch, validate(createRoomSchema, 'body'), createRoom);
+router.post('/bulk', authenticateToken, injectUserBranch, validate(bulkCreateRoomSchema, 'body'), createRoomsBulk);
 
 /**
  * @swagger

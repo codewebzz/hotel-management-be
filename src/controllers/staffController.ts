@@ -6,11 +6,10 @@ const staffService = new StaffService();
 
 export const createStaff = async (req: Request, res: Response) => {
   try {
-    const { userId, branchId, position, salary, joinDate, shiftTiming } = req.body;
+    const { userId, position, salary, joinDate, shiftTiming } = req.body;
 
     const staff = await staffService.createStaff({
       userId,
-      branchId,
       position,
       salary,
       joinDate,
@@ -33,8 +32,9 @@ export const getAllStaff = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const search = req.query.search as string | undefined;
+    const branchId = req.query.branchId as string | undefined;
 
-    const result = await staffService.getAllStaffPaginated(page, limit, search);
+    const result = await staffService.getAllStaffPaginated(page, limit, search, branchId);
 
     return SendSuccess(res, 'Staff retrieved successfully', result.data, 200, {
       total: result.total,
@@ -63,11 +63,10 @@ export const getStaffById = async (req: Request, res: Response) => {
 export const updateStaff = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { userId, branchId, position, salary, joinDate, shiftTiming, isActive } = req.body;
+    const { userId, position, salary, joinDate, shiftTiming, isActive } = req.body;
 
     const staff = await staffService.updateStaff(id, {
       userId,
-      branchId,
       position,
       salary,
       joinDate,
