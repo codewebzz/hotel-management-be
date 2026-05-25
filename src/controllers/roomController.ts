@@ -167,6 +167,37 @@ export const toggleRoomStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const changeRoomStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return SendError(res, 'Status is required', 400);
+    }
+
+    const room = await roomService.changeRoomStatus(id, status);
+
+    return SendSuccess(res, 'Room status changed successfully', room);
+  } catch (error: any) {
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    return SendError(res, 'Error changing room status', statusCode, error);
+  }
+};
+
+export const getRoomStatusHistory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const history = await roomService.getRoomStatusHistory(id);
+
+    return SendSuccess(res, 'Room status history retrieved successfully', history);
+  } catch (error: any) {
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    return SendError(res, 'Error retrieving room status history', statusCode, error);
+  }
+};
+
 export const createRoomsBulk = async (req: Request, res: Response) => {
   try {
     const { rooms, branchId } = req.body;

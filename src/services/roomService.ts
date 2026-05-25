@@ -1,5 +1,6 @@
 import { RoomRepository } from '../repositories/roomRepository';
-import { Room } from '../entities/Room';
+import { Room, RoomStatus } from '../entities/Room';
+import { RoomStatusHistory } from '../entities/RoomStatusHistory';
 import { AppDataSource } from '../config/database';
 
 export class RoomService {
@@ -230,6 +231,14 @@ export class RoomService {
     return await this.repo.toggleStatus(id);
   }
 
+  async changeRoomStatus(id: string, newStatus: RoomStatus): Promise<Room> {
+    return await this.repo.updateRoomStatusWithHistory(id, newStatus);
+  }
+
+  async getRoomStatusHistory(id: string): Promise<RoomStatusHistory[]> {
+    return await this.repo.getStatusHistory(id);
+  }
+
   async createRoomsBulk(
     rooms: {
       roomNumber: string;
@@ -242,111 +251,7 @@ export class RoomService {
       branchId: string;
     }[]
   ): Promise<Room[]> {
-    const queryRunner = AppDataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const createdRooms: Room[] = [];
-      const roomTypeRepository = queryRunner.manager.getRepository('RoomType');
-      const companyRepository = queryRunner.manager.getRepository('Company');
-      const brandRepository = queryRunner.manager.getRepository('Brand');
-      const branchRepository = queryRunner.manager.getRepository('Branch');
-      const floorRepository = queryRunner.manager.getRepository('Floor');
-
-      // Cache floors during bulk creation to avoid repeated DB calls
-      const floorCache: Record<string, string> = {};
-
-      for (const roomData of rooms) {
-        const exists = await this.repo.existsByRoomNumberInBranch(
-          roomData.roomNumber,
-          roomData.branchId
-        );
-        if (exists) {
-          throw new Error(
-            `Room number ${roomData.roomNumber} already exists in this branch`
-          );
-        }
-
-        const roomType = await roomTypeRepository.findOne({
-          where: { id: roomData.roomTypeId },
-        });
-        if (!roomType) {
-          throw new Error(`RoomType not found for room ${roomData.roomNumber}`);
-        }
-
-        const company = await companyRepository.findOne({
-          where: { id: roomData.companyId },
-        });
-        if (!company) {
-          throw new Error(`Company not found for room ${roomData.roomNumber}`);
-        }
-
-        const brand = await brandRepository.findOne({
-          where: { id: roomData.brandId },
-        });
-        if (!brand) {
-          throw new Error(`Brand not found for room ${roomData.roomNumber}`);
-        }
-
-        const branch = await branchRepository.findOne({
-          where: { id: roomData.branchId },
-        });
-        if (!branch) {
-          throw new Error(`Branch not found for room ${roomData.roomNumber}`);
-        }
-
-        let resolvedFloorId = roomData.floorId;
-
-        // If floor number is provided but no floorId, resolve or create the floor
-        if (!resolvedFloorId && roomData.floor !== undefined && roomData.floor !== null) {
-          const cacheKey = `${roomData.branchId}-${roomData.floor}`;
-          if (floorCache[cacheKey]) {
-            resolvedFloorId = floorCache[cacheKey];
-          } else {
-            let floorEntity = await floorRepository.findOne({
-              where: { branchId: roomData.branchId, floorNumber: roomData.floor }
-            });
-
-            if (!floorEntity) {
-              const newFloor = floorRepository.create({
-                floorNumber: roomData.floor,
-                name: `Floor ${roomData.floor}`,
-                companyId: roomData.companyId,
-                brandId: roomData.brandId,
-                branchId: roomData.branchId,
-                isActive: true
-              });
-              floorEntity = await floorRepository.save(newFloor);
-            }
-            resolvedFloorId = floorEntity.id;
-            floorCache[cacheKey] = floorEntity.id;
-          }
-        }
-
-        const room = queryRunner.manager.create(Room, {
-          roomNumber: roomData.roomNumber,
-          roomTypeId: roomData.roomTypeId,
-          floorId: resolvedFloorId,
-          notes: roomData.notes,
-          companyId: roomData.companyId,
-          brandId: roomData.brandId,
-          branchId: roomData.branchId,
-          isActive: true,
-        });
-
-        const savedRoom = await queryRunner.manager.save(room);
-        createdRooms.push(savedRoom);
-      }
-
-      await queryRunner.commitTransaction();
-      return createdRooms;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    return await this.repo.createBulk(rooms);
   }
 }
 

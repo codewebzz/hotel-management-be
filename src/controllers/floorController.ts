@@ -8,6 +8,8 @@ const floorService = new FloorService();
 
 export const getFloorsByBranch = async (req: any, res: Response) => {
   try {
+
+    console.log(req.user)
     const branchId = req.user?.branchId;
     if (!branchId) {
       return res.status(400).json({ success: false, error: 'User branch not found' });
@@ -24,7 +26,7 @@ export const createFloor = async (req: any, res: Response) => {
     const branchId = req.user?.branchId;
 
     if (!branchId) {
-        return res.status(400).json({ success: false, error: 'User branch not found in context' });
+      return res.status(400).json({ success: false, error: 'User branch not found in context' });
     }
 
     const branchRepository = AppDataSource.getRepository(Branch);
@@ -47,10 +49,10 @@ export const createFloor = async (req: any, res: Response) => {
     const data = createFloorSchema.parse(req.body);
 
     const floor = await floorService.createFloor({
-        ...data,
-        branchId,
-        companyId,
-        brandId
+      ...data,
+      branchId,
+      companyId,
+      brandId
     });
     res.status(201).json({ success: true, data: floor, message: 'Floor created successfully' });
   } catch (error: any) {

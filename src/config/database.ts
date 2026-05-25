@@ -16,6 +16,7 @@ import { Booking } from "../entities/Booking";
 import { Invoice } from "../entities/Invoice";
 import { Staff } from "../entities/Staff";
 import { HousekeepingLog } from "../entities/HousekeepingLog";
+import { RoomStatusHistory } from "../entities/RoomStatusHistory";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -47,6 +48,7 @@ export const AppDataSource = new DataSource({
     Invoice,
     Staff,
     HousekeepingLog,
+    RoomStatusHistory,
   ],
   migrations: [path.join(__dirname, "../migrations/*.{ts,js}")],
   subscribers: [],

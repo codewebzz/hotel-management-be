@@ -12,6 +12,13 @@ import { Company } from './Company';
 import { Brand } from './Brand';
 import { Branch } from './Branch';
 import { Floor } from './Floor';
+
+export enum RoomStatus {
+  AVAILABLE = 'AVAILABLE',
+  OCCUPIED = 'OCCUPIED',
+  HOUSEKEEPING = 'HOUSEKEEPING',
+  MAINTENANCE = 'MAINTENANCE',
+}
 @Entity('rooms')
 export class Room {
   @PrimaryGeneratedColumn('uuid')
@@ -60,6 +67,13 @@ export class Room {
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;
+
+  @Column({
+    type: 'enum',
+    enum: RoomStatus,
+    default: RoomStatus.AVAILABLE,
+  })
+  status!: RoomStatus;
 
   @CreateDateColumn()
   createdAt!: Date;

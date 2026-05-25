@@ -20,6 +20,7 @@ import staffRoutes from './routes/staffRoutes';
 import housekeepingLogRoutes from './routes/housekeepingLogRoutes';
 import imageRoutes from './routes/imageRoutes';
 import floorRoutes from './routes/floorRoutes';
+import dropdownRoutes from './routes/dropdownRoutes';
 import { authenticateToken } from './middleware/auth';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -68,11 +69,7 @@ app.use('/api/amenities', authenticateToken, amenityRoutes);
 app.use('/api/companies', authenticateToken, companyRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/room-types', authenticateToken, roomTypeRoutes);
-app.use(
-  '/api/room-type-amenities',
-  authenticateToken,
-  roomTypeAmenityRoutes
-);
+app.use('/api/room-type-amenities', authenticateToken, roomTypeAmenityRoutes);
 app.use('/api/rooms', authenticateToken, roomRoutes);
 app.use('/api/floors', authenticateToken, floorRoutes);
 app.use('/api/pricings', authenticateToken, pricingRoutes);
@@ -82,6 +79,9 @@ app.use('/api/invoices', authenticateToken, invoiceRoutes);
 app.use('/api/staff', authenticateToken, staffRoutes);
 app.use('/api/housekeeping', authenticateToken, housekeepingLogRoutes);
 app.use('/api/images', authenticateToken, imageRoutes);
+app.use('/api/dropdowns', authenticateToken, dropdownRoutes);
+
+
 // Health check
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({

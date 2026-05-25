@@ -8,8 +8,10 @@ import {
   getActiveRooms,
   toggleRoomStatus,
   createRoomsBulk,
+  changeRoomStatus,
+  getRoomStatusHistory,
 } from '../controllers/roomController';
-import { authenticateToken, injectUserBranch } from '../middleware/auth';
+import { authenticateToken, authenticateUser } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
   createRoomSchema,
@@ -196,8 +198,8 @@ router.get('/', authenticateToken, validate(paginationSchema, 'query'), getAllRo
  *                 data:
  *                   $ref: '#/components/schemas/Room'
  */
-router.post('/', authenticateToken, injectUserBranch, validate(createRoomSchema, 'body'), createRoom);
-router.post('/bulk', authenticateToken, injectUserBranch, validate(bulkCreateRoomSchema, 'body'), createRoomsBulk);
+router.post('/', authenticateUser, validate(createRoomSchema, 'body'), createRoom);
+router.post('/bulk', authenticateUser, validate(bulkCreateRoomSchema, 'body'), createRoomsBulk);
 
 /**
  * @swagger
@@ -400,5 +402,58 @@ router.delete('/:id', authenticateToken, deleteRoom);
  *         description: Room not found
  */
 router.put('/:id/change-status', authenticateToken, toggleRoomStatus);
+
+/**
+ * @swagger
+ * /api/rooms/{id}/status:
+ *   put:
+ *     summary: Update room granular status
+ *     tags:
+ *       - Rooms
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Room status updated
+ */
+router.put('/:id/status', authenticateToken, changeRoomStatus);
+
+/**
+ * @swagger
+ * /api/rooms/{id}/status-history:
+ *   get:
+ *     summary: Get room status history
+ *     tags:
+ *       - Rooms
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: History retrieved
+ */
+router.get('/:id/status-history', authenticateToken, getRoomStatusHistory);
 
 export default router;

@@ -65,3 +65,5 @@ export const authorizeRoles = (...roles: string[]) => {
     next();
   };
 };
+
+export const authenticateUser = [authenticateToken, injectUserBranch];
