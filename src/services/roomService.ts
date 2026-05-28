@@ -253,6 +253,17 @@ export class RoomService {
   ): Promise<Room[]> {
     return await this.repo.createBulk(rooms);
   }
+
+  async getRoomsByFloor(branchId: string): Promise<any[]> {
+    const floors = await this.repo.getRoomsByFloor(branchId);
+    return floors.map((f) => {
+      const { rooms, ...floorInfo } = f;
+      return {
+        floor: floorInfo,
+        rooms: rooms || [],
+      };
+    });
+  }
 }
 
 

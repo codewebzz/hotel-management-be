@@ -2,6 +2,7 @@ import { Repository, IsNull } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Room, RoomStatus } from '../entities/Room';
 import { RoomStatusHistory } from '../entities/RoomStatusHistory';
+import { Floor } from '../entities/Floor';
 
 export class RoomRepository {
   private repository: Repository<Room>;
@@ -287,6 +288,18 @@ export class RoomRepository {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getRoomsByFloor(branchId: string): Promise<Floor[]> {
+    const floorRepository = AppDataSource.getRepository(Floor);
+    return await floorRepository
+      .createQueryBuilder('floor')
+      .leftJoinAndSelect('floor.rooms', 'room')
+      .leftJoinAndSelect('room.roomType', 'roomType')
+      .where('floor.branchId = :branchId', { branchId })
+      .orderBy('floor.floorNumber', 'ASC')
+      .addOrderBy('room.roomNumber', 'ASC')
+      .getMany();
   }
 }
 

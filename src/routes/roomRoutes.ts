@@ -10,6 +10,7 @@ import {
   createRoomsBulk,
   changeRoomStatus,
   getRoomStatusHistory,
+  getRoomsByFloor,
 } from '../controllers/roomController';
 import { authenticateToken, authenticateUser } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -228,6 +229,7 @@ router.post('/bulk', authenticateUser, validate(bulkCreateRoomSchema, 'body'), c
  *                     $ref: '#/components/schemas/Room'
  */
 router.get('/all', authenticateToken, getActiveRooms);
+router.get('/by-floor', authenticateToken, getRoomsByFloor);
 
 /**
  * @swagger

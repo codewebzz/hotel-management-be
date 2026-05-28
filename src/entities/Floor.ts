@@ -6,10 +6,12 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 import { Company } from './Company';
 import { Brand } from './Brand';
 import { Branch } from './Branch';
+import { Room } from './Room';
 
 @Entity('floors')
 export class Floor {
@@ -45,6 +47,9 @@ export class Floor {
 
   @Column({ type: 'boolean', default: true })
   isActive!: boolean;
+
+  @OneToMany(() => Room, (room) => room.floor)
+  rooms!: Room[];
 
   @CreateDateColumn()
   createdAt!: Date;

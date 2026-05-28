@@ -253,3 +253,17 @@ export const createRoomsBulk = async (req: Request, res: Response) => {
   }
 };
 
+export const getRoomsByFloor = async (req: Request, res: Response) => {
+  try {
+    const branchId = (req as any).user?.branchId;
+    if (!branchId) {
+      return SendError(res, 'User branch context not found', 400);
+    }
+
+    const result = await roomService.getRoomsByFloor(branchId);
+    return SendSuccess(res, 'Rooms by floor retrieved successfully', result, 200);
+  } catch (error: any) {
+    return SendError(res, 'Error retrieving rooms by floor', 500, error);
+  }
+};
+
